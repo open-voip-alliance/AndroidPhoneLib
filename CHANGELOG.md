@@ -1,3 +1,3 @@
 # Changelog
 
-{insert releases + changes}
+27-7-2020: Initialised library.
