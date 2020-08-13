@@ -37,4 +37,17 @@ class LinphoneSipRegisterRepository(private val linphoneCoreInstanceManager: Lin
             }
         }
     }
+
+    override fun unregister() {
+        val proxyConfigs = linphoneCoreInstanceManager.safeLinphoneCore?.proxyConfigList
+        proxyConfigs?.forEach {
+            it.edit()
+            it.enableRegister(false)
+            it.done()
+            linphoneCoreInstanceManager.safeLinphoneCore?.removeProxyConfig(it)
+        }
+        linphoneCoreInstanceManager.safeLinphoneCore?.authInfosList?.forEach {
+            linphoneCoreInstanceManager.safeLinphoneCore?.removeAuthInfo(it)
+        }
+    }
 }

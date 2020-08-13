@@ -15,4 +15,6 @@
     <string name="successfully_logged_in">Successfully logged in!</string>
     <string name="video_call">Video call</string>
     <string name="hold">Hold</string>
+    <string name="unregister">Unregister</string>
+    <string name="successfully_unregistered">Successfully unregistered</string>
 </resources>

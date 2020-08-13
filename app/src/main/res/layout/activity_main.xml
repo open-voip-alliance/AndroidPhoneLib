@@ -55,6 +55,16 @@
             android:textColor="@color/colorAccent" />
 
         <Button
+            android:id="@+id/unregister"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/rounded_button_ripple"
+            android:text="@string/unregister"
+            android:textColor="@color/colorAccent" />
+
+        <Button
             android:id="@+id/hang_up"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

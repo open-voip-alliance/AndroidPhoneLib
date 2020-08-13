@@ -13,12 +13,12 @@ class Session(val linphoneCall: LinphoneCall) {
 
     val getDisplayName: String
         get() {
-            return linphoneCall.remoteAddress.displayName
+            return linphoneCall.remoteAddress?.displayName ?: ""
         }
 
     val getPhoneNumber: String
         get() {
-            return linphoneCall.remoteAddress.userName
+            return linphoneCall.remoteAddress?.userName ?: ""
         }
 
     val getDuration: Int

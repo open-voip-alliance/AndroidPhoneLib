@@ -114,6 +114,9 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "No permission granted")
             }
         }
+        unregister.setOnClickListener {
+            PhoneLib.getInstance(this@MainActivity).unregister()
+        }
         hang_up.setOnClickListener {
             latestSession?.let {
                 PhoneLib.getInstance(this@MainActivity).end(it)

@@ -64,6 +64,15 @@ Step 3: Use `register` to register the softphone.
 If register succeeds the callback `statecChanged(RegistrationState.REGISTERED)` will be called.
 
 
+To `unregister` use:
+
+```
+            PhoneLib.getInstance(this).unregister()
+```
+
+This will call `stateChanged(RegistrationState.CLEARED)` of the callback
+
+
 ## Set supported codecs.
 
 ### Set codecs

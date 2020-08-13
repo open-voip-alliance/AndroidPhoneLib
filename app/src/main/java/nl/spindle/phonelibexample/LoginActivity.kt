@@ -37,12 +37,16 @@ class LoginActivity : AppCompatActivity() {
             PhoneLib.getInstance(this).register(account, password, serverIP, port, object : RegistrationCallback() {
                 override fun stateChanged(registrationState: RegistrationState) {
                     super.stateChanged(registrationState)
-                    if (registrationState == RegistrationState.REGISTERED) {
-                        Toast.makeText(this@LoginActivity, getString(R.string.successfully_logged_in), Toast.LENGTH_SHORT).show()
-                        goToMainActivity()
-                    } else {
-                        Log.e(TAG, "registrationFailed: ")
-                        Toast.makeText(this@LoginActivity, getString(R.string.registration_failed), Toast.LENGTH_SHORT).show()
+                    when (registrationState) {
+                        RegistrationState.REGISTERED -> {
+                            Toast.makeText(this@LoginActivity, getString(R.string.successfully_logged_in), Toast.LENGTH_SHORT).show()
+                            goToMainActivity()
+                        }
+                        RegistrationState.CLEARED -> Toast.makeText(this@LoginActivity, getString(R.string.successfully_unregistered), Toast.LENGTH_SHORT).show()
+                        else -> {
+                            Log.e(TAG, "registrationFailed: ")
+                            Toast.makeText(this@LoginActivity, getString(R.string.registration_failed), Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             })

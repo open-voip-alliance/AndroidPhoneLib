@@ -55,6 +55,12 @@ class PhoneLib private constructor(
             = sipRegisterRepository.registerUser(username, password, domain, port, registrationCallback)
 
     /**
+     * This unregisters your user on SIP.
+     */
+    fun unregister()
+            = sipRegisterRepository.unregister()
+
+    /**
      * Set the audio codecs you want to support, if none set all are selected, options are visible in @see nl.spindle.phonelib.model.Codec.
      * @param codecs the codecs you want to support
      */
