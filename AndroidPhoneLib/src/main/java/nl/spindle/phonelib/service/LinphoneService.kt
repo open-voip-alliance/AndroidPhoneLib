@@ -6,24 +6,20 @@ import android.os.IBinder
 import android.util.Log
 import nl.spindle.phonelib.model.Session
 import nl.spindle.phonelib.repository.LinphoneCoreInstanceManager
-import nl.spindle.phonelib.repository.call.codecs.SipCodecsRepository
+import nl.spindle.phonelib.repository.call.codecs.SipConfigurationsRepository
 import nl.spindle.phonelib.repository.initialise.SessionCallback
 import nl.spindle.phonelib.repository.registration.RegistrationCallback
 import org.koin.android.ext.android.inject
-import org.linphone.core.LinphoneCall
-import org.linphone.core.LinphoneCore
-import org.linphone.core.LinphoneCore.RegistrationState
-import org.linphone.core.LinphoneCoreFactoryImpl
-import org.linphone.core.LinphoneProxyConfig
+import org.linphone.core.*
 
 class LinphoneService : Service(), SimpleLinphoneCoreListener {
     private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager by inject()
-    private val sipCodecsRepository: SipCodecsRepository by inject()
+    private val sipCodecsRepository: SipConfigurationsRepository by inject()
 
     override fun onCreate() {
         super.onCreate()
-        LinphoneCoreFactoryImpl.instance()
-        linphoneCoreInstanceManager.initialiseLinphone(this@LinphoneService, sipCodecsRepository.getAudioCodecs( this@LinphoneService))
+        Factory.instance()
+        linphoneCoreInstanceManager.initialiseLinphone(this@LinphoneService, sipCodecsRepository.getAudioCodecs())
         instance = this
     }
 
@@ -31,7 +27,6 @@ class LinphoneService : Service(), SimpleLinphoneCoreListener {
         super.onDestroy()
         Log.e(TAG, "LinphoneService onDestroy execute")
         removeAllCallbacks()
-        linphoneCoreInstanceManager.safeLinphoneCore?.destroy()
         linphoneCoreInstanceManager.destroy()
     }
 
@@ -44,22 +39,21 @@ class LinphoneService : Service(), SimpleLinphoneCoreListener {
         removeRegistrationCallback()
     }
 
-    override fun registrationState(linphoneCore: LinphoneCore, linphoneProxyConfig: LinphoneProxyConfig,
-                                   registrationState: RegistrationState, s: String) {
-        sRegistrationCallback?.stateChanged(when (registrationState) {
-            RegistrationState.RegistrationNone -> {
+    override fun onRegistrationStateChanged(lc: Core?, cfg: ProxyConfig?, cstate: RegistrationState?, message: String?) {
+        sRegistrationCallback?.stateChanged(when (cstate) {
+            RegistrationState.None -> {
                 nl.spindle.phonelib.model.RegistrationState.NONE
             }
-            RegistrationState.RegistrationProgress -> {
+            RegistrationState.Progress -> {
                 nl.spindle.phonelib.model.RegistrationState.PROGRESS
             }
-            RegistrationState.RegistrationOk -> {
+            RegistrationState.Ok -> {
                 nl.spindle.phonelib.model.RegistrationState.REGISTERED
             }
-            RegistrationState.RegistrationCleared -> {
+            RegistrationState.Cleared -> {
                 nl.spindle.phonelib.model.RegistrationState.CLEARED
             }
-            RegistrationState.RegistrationFailed -> {
+            RegistrationState.Failed -> {
                 nl.spindle.phonelib.model.RegistrationState.FAILED
             }
             else -> {
@@ -68,29 +62,30 @@ class LinphoneService : Service(), SimpleLinphoneCoreListener {
         })
     }
 
-    override fun callState(linphoneCore: LinphoneCore, linphoneCall: LinphoneCall, state: LinphoneCall.State, s: String) {
-        Log.e(TAG, "callState: $state")
+
+    override fun onCallStateChanged(lc: Core?, linphoneCall: Call?, state: Call.State?, message: String?) {
+        Log.e(TAG, "callState: $state, Message: $message")
         when {
-            state === LinphoneCall.State.IncomingReceived -> {
-                sPhoneCallback?.incomingCall(Session(linphoneCall))
+            state === Call.State.IncomingReceived -> {
+                sPhoneCallback?.incomingCall(Session(linphoneCall!!))
             }
-            state === LinphoneCall.State.OutgoingInit -> {
-                sPhoneCallback?.outgoingInit(Session(linphoneCall))
+            state === Call.State.OutgoingInit -> {
+                sPhoneCallback?.outgoingInit(Session(linphoneCall!!))
             }
-            state === LinphoneCall.State.Connected -> {
-                sPhoneCallback?.sessionConnected(Session(linphoneCall))
+            state === Call.State.Connected -> {
+                sPhoneCallback?.sessionConnected(Session(linphoneCall!!))
             }
-            state === LinphoneCall.State.CallEnd -> {
-                sPhoneCallback?.sessionEnded(Session(linphoneCall))
+            state === Call.State.End -> {
+                sPhoneCallback?.sessionEnded(Session(linphoneCall!!))
             }
-            state === LinphoneCall.State.CallReleased -> {
-                sPhoneCallback?.sessionReleased(Session(linphoneCall))
+            state === Call.State.Released -> {
+                sPhoneCallback?.sessionReleased(Session(linphoneCall!!))
             }
-            state === LinphoneCall.State.Error -> {
-                sPhoneCallback?.error(Session(linphoneCall))
+            state === Call.State.Error -> {
+                sPhoneCallback?.error(Session(linphoneCall!!))
             }
             else -> {
-                sPhoneCallback?.sessionUpdated(Session(linphoneCall))
+                sPhoneCallback?.sessionUpdated(Session(linphoneCall!!))
             }
         }
     }
@@ -122,7 +117,7 @@ class LinphoneService : Service(), SimpleLinphoneCoreListener {
         }
 
         fun ensureReady(ready: () -> Unit) {
-            Thread(Runnable {
+            Thread {
                 while (!isInitialised) {
                     try {
                         Thread.sleep(80)
@@ -131,7 +126,7 @@ class LinphoneService : Service(), SimpleLinphoneCoreListener {
                     }
                 }
                 ready()
-            }).start()
+            }.start()
         }
     }
 }

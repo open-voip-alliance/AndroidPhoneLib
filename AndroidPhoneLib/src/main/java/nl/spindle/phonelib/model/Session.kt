@@ -1,9 +1,9 @@
 package nl.spindle.phonelib.model
 
-import org.linphone.core.LinphoneCall
+import org.linphone.core.Call
 import org.linphone.core.Reason
 
-class Session(val linphoneCall: LinphoneCall) {
+class Session(val linphoneCall: Call) {
 
     val getState: CallState
         get() {
@@ -18,7 +18,7 @@ class Session(val linphoneCall: LinphoneCall) {
 
     val getPhoneNumber: String
         get() {
-            return linphoneCall.remoteAddress?.userName ?: ""
+            return linphoneCall.remoteAddress?.username ?: ""
         }
 
     val getDuration: Int
@@ -31,12 +31,10 @@ class Session(val linphoneCall: LinphoneCall) {
             return when (linphoneCall.reason) {
                 Reason.None -> nl.spindle.phonelib.model.Reason.NONE
                 Reason.NoResponse -> nl.spindle.phonelib.model.Reason.NO_RESPONSE
-                Reason.BadCredentials -> nl.spindle.phonelib.model.Reason.BAD_CREDENTIALS
                 Reason.Declined -> nl.spindle.phonelib.model.Reason.DECLINED
                 Reason.NotFound -> nl.spindle.phonelib.model.Reason.NOT_FOUND
                 Reason.NotAnswered -> nl.spindle.phonelib.model.Reason.NOT_ANSWERED
                 Reason.Busy -> nl.spindle.phonelib.model.Reason.BUSY
-                Reason.Media -> nl.spindle.phonelib.model.Reason.MEDIA
                 Reason.IOError -> nl.spindle.phonelib.model.Reason.IO_ERROR
                 Reason.DoNotDisturb -> nl.spindle.phonelib.model.Reason.DO_NOT_DISTURB
                 Reason.Unauthorized -> nl.spindle.phonelib.model.Reason.UNAUTHORISED

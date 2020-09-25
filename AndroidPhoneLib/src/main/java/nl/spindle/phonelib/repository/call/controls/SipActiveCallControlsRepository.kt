@@ -4,9 +4,16 @@ import nl.spindle.phonelib.model.Session
 
 interface SipActiveCallControlsRepository {
     fun setMicrophone(on: Boolean)
-    fun setSpeaker(on: Boolean)
+
     fun setHold(session: Session, on: Boolean)
 
     fun isMicrophoneMuted(): Boolean
-    fun isSpeakerEnabled(): Boolean
+
+    fun transferUnattended(session: Session, to: String)
+
+    fun switchSession(from: Session, to: Session)
+
+    fun pauseSession(session: Session)
+
+    fun resumeSession(session: Session)
 }

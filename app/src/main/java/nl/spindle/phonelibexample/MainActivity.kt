@@ -22,7 +22,8 @@ private const val REQUEST_VIDEO_PERMISSION = 3
 class MainActivity : AppCompatActivity() {
 
     private lateinit var handler: Handler
-    private var latestSession: Session? = null
+    private var activeSession: Session? = null
+    private var secondSession: Session? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,10 +36,12 @@ class MainActivity : AppCompatActivity() {
         PhoneLib.getInstance(this).setSessionCallback(object : SessionCallback() {
             override fun incomingCall(incomingSession: Session) {
                 super.incomingCall(incomingSession)
-                latestSession = incomingSession
-                PhoneLib.getInstance(this@MainActivity).setSpeaker(true)
+                activeSession = incomingSession
                 accept_call.visibility = View.VISIBLE
                 hang_up.visibility = View.VISIBLE
+                transfer.visibility = View.VISIBLE
+                add_call.visibility = View.VISIBLE
+                switch_calls.visibility = View.VISIBLE
                 caller.text = incomingSession.getDisplayName
                 setDuration()
             }
@@ -46,12 +49,14 @@ class MainActivity : AppCompatActivity() {
             override fun outgoingInit(session: Session) {
                 super.outgoingInit(session)
                 hang_up.visibility = View.VISIBLE
+                transfer.visibility = View.VISIBLE
+                add_call.visibility = View.VISIBLE
+                switch_calls.visibility = View.VISIBLE
             }
 
             override fun sessionConnected(session: Session) {
                 super.sessionConnected(session)
-                PhoneLib.getInstance(this@MainActivity).setSpeaker(PhoneLib.getInstance(this@MainActivity).isVideoEnabled())
-                PhoneLib.getInstance(this@MainActivity).setMuteMicrophone(false)
+                PhoneLib.getInstance(this@MainActivity).setMicrophone(true)
                 accept_call.visibility = View.GONE
                 call_buttons.visibility = View.VISIBLE
                 call_data.visibility = View.VISIBLE
@@ -64,9 +69,12 @@ class MainActivity : AppCompatActivity() {
                 sendBroadcast(Intent(VideoActivity.RECEIVE_FINISH_VIDEO_ACTIVITY))
                 accept_call.visibility = View.GONE
                 hang_up.visibility = View.GONE
+                transfer.visibility = View.GONE
+                add_call.visibility = View.GONE
+                switch_calls.visibility = View.GONE
                 call_buttons.visibility = View.GONE
                 call_data.visibility = View.GONE
-                latestSession = null
+                activeSession = null
             }
 
             override fun sessionEnded(session: Session) {
@@ -74,9 +82,12 @@ class MainActivity : AppCompatActivity() {
                 sendBroadcast(Intent(VideoActivity.RECEIVE_FINISH_VIDEO_ACTIVITY))
                 accept_call.visibility = View.GONE
                 hang_up.visibility = View.GONE
+                transfer.visibility = View.GONE
+                add_call.visibility = View.GONE
+                switch_calls.visibility = View.GONE
                 call_buttons.visibility = View.GONE
                 call_data.visibility = View.GONE
-                latestSession = null
+                activeSession = null
             }
         })
     }
@@ -84,8 +95,8 @@ class MainActivity : AppCompatActivity() {
     private fun setDuration() {
         handler = Handler();
         handler.postDelayed({
-            duration.text = latestSession?.getDuration.toString()
-            if (latestSession != null) {
+            duration.text = activeSession?.getDuration.toString()
+            if (activeSession != null) {
                 setDuration()
             }
         }, TimeUnit.SECONDS.toMillis(1))
@@ -97,7 +108,7 @@ class MainActivity : AppCompatActivity() {
             val dialNum = dial_number.text.toString()
             if (hasAudioCallPermissions()) {
                 PhoneLib.getInstance(this@MainActivity).callTo(dialNum, false)?.let {
-                    latestSession = it
+                    activeSession = it
                 }
             } else {
                 Log.e(TAG, "No permission granted")
@@ -107,7 +118,7 @@ class MainActivity : AppCompatActivity() {
             val dialNum = dial_number.text.toString()
             if (hasVideoCallPermissions() && hasAudioCallPermissions()) {
                 PhoneLib.getInstance(this@MainActivity).callTo(dialNum, true)?.let {
-                    latestSession = it
+                    activeSession = it
                 }
                 startActivity(Intent(this@MainActivity, VideoActivity::class.java))
             } else {
@@ -118,13 +129,37 @@ class MainActivity : AppCompatActivity() {
             PhoneLib.getInstance(this@MainActivity).unregister()
         }
         hang_up.setOnClickListener {
-            latestSession?.let {
+            activeSession?.let {
                 PhoneLib.getInstance(this@MainActivity).end(it)
+            }
+        }
+        transfer.setOnClickListener {
+            activeSession?.let {
+                PhoneLib.getInstance(this@MainActivity).transferUnattended(it, dial_number.text.toString())
+            }
+        }
+        add_call.setOnClickListener {
+            activeSession?.let {
+                secondSession = PhoneLib.getInstance(this@MainActivity).callTo(dial_number.text.toString())
+                secondSession?.let { newSession ->
+                    PhoneLib.getInstance(this@MainActivity).switchSession(it, newSession)
+                    activeSession = newSession
+                    secondSession = it
+                }
+            }
+        }
+        switch_calls.setOnClickListener {
+            activeSession?.let {
+                secondSession?.let { newSession ->
+                    PhoneLib.getInstance(this@MainActivity).switchSession(it, newSession)
+                    activeSession = newSession
+                    secondSession = it
+                }
             }
         }
         accept_call.setOnClickListener {
             if (hasAudioCallPermissions()) {
-                latestSession?.let {
+                activeSession?.let {
                     PhoneLib.getInstance(this@MainActivity).acceptIncoming(it)
                 }
                 if (PhoneLib.getInstance(this@MainActivity).isVideoEnabled()) {
@@ -135,13 +170,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
         toggle_mute.setOnCheckedChangeListener{_, checked ->
-            PhoneLib.getInstance(this@MainActivity).setMuteMicrophone(checked)
-        }
-        toggle_speaker.setOnCheckedChangeListener{_, checked ->
-            PhoneLib.getInstance(this@MainActivity).setSpeaker(checked)
+            PhoneLib.getInstance(this@MainActivity).setMicrophone(!checked)
         }
         toggle_hold.setOnCheckedChangeListener{_, checked ->
-            latestSession?.let {
+            activeSession?.let {
                 PhoneLib.getInstance(this@MainActivity).setHold(it, checked)
             }
         }

@@ -5,20 +5,10 @@ This is a library intended for use by Spindle which is responsible for VoIP SIP 
 It is designed to make it easier to implement SIP functions into an app.
 Currently it uses Linphone as the underlying SIP SDK. But it's built in a way that the SIP SDK can easily be swapped by another one.
 
-## Status
+## Installation
 
-Maintained and Beta
+### Under construction
 
-
-## Requirements
-
-Android 5.0 and up
-Microphone
-Camera
-Data connection
-
-
-## Usage
 
 ## Permissions
 
@@ -49,7 +39,7 @@ PhoneLib.getInstance(CONTEXT).initialise(this)
 Step 3: Use `register` to register the softphone. 
 
 ```
-            PhoneLib.getInstance(this).register(account, password, serverIP, port, object : RegistrationCallback() {
+            PhoneLib.getInstance(this).register(account, password, serverIP, port, stunServer, object : RegistrationCallback() {
                 override fun stateChanged(registrationState: RegistrationState) {
                     super.stateChanged(registrationState)
                     if (registrationState == RegistrationState.REGISTERED) {
@@ -61,8 +51,7 @@ Step 3: Use `register` to register the softphone.
             })
 ```
 
-If register succeeds the callback `statecChanged(RegistrationState.REGISTERED)` will be called.
-
+If register succeeds the callback `stateChanged(RegistrationState.REGISTERED)` will be called.
 
 To `unregister` use:
 
@@ -71,7 +60,6 @@ To `unregister` use:
 ```
 
 This will call `stateChanged(RegistrationState.CLEARED)` of the callback
-
 
 ## Set supported codecs.
 
@@ -137,6 +125,7 @@ Once registered you can make a call by calling `PhoneLib.getInstance(CONTEXT).ca
 val session = PhoneLib.getInstance(this@Activity).callTo('0612345678', false)
 ```
 
+## Control an incoming call
 
 ### Incoming call
 Incoming call are received via `incomingCall(session: Session?)` in the `PhoneCallback`.
@@ -150,23 +139,30 @@ Accepting a call is done via `PhoneLib.getInstance(this@Activity).acceptIncoming
 ### End call
 Ending a call is done via `PhoneLib.getInstance(this@Activity).end(session)`.
 
-### Muting the microphone
-Muting the microphone is done via `PhoneLib.getInstance(this@Activity).setMuteMicrophone(true)`.
 
-### Turning on speaker
-Turning speaker on or off is done via `PhoneLib.getInstance(this@Activity).setSpeaker(true)`.
+## Controlling an active call
+
+### Mute the microphone
+Muting the microphone is done via `PhoneLib.getInstance(this@Activity).setMuteMicrophone(true)`.
 
 ### Set call on hold
 Setting call on or off hold is done with `PhoneLib.getInstance(this@Activity).setHold(session, true)`.
 
-### Check if call is on hold
-The call is on hold when the CallState is `Paused` (or to be exact: `CallState.Paused`). If the other party has set the call to paused the call state is `PausedByRemote`.
+### Set call on hold
+Setting call on or off hold is done with `PhoneLib.getInstance(this@Activity).setHold(session, true)`.
 
-### Checking if speaker is on
-Checking if speaker is on can be done via `PhoneLib.getInstance(this@Activity).isSpeakerOn()`.
+### Transfer a session to a number unattended.
+Transfer a session unattended to a number with `PhoneLib.getInstance(this@Activity).transferUnattended(session, "0612345678")`.
+
+
+## Get call states
 
 ### Checking if microphone is muted
 Checking if microphone is on can be done via `PhoneLib.getInstance(this@Activity).isMicrophoneMuted()`.
+
+### Check if call is on hold
+The call is on hold when the CallState is `Paused` (or to be exact: `CallState.Paused`). If the other party has set the call to paused the call state is `PausedByRemote`.
+
 
 ### Getting session/call information
 The `Session` object contains all information about the session. 
@@ -228,29 +224,5 @@ The `Session` object contains all information about the session.
 ### Video Call
 UNDER CONSTRUCTION
 
-### Running
-There is a sample project included which when runned uses the library.
-
-## Contributing
-
-See the [CONTRIBUTING.md](CONTRIBUTING.md) file on how to contribute to this project.
-
-## Contributors
-
-See the [CONTRIBUTORS.md](CONTRIBUTORS.md) file for a list of contributors to the project.
-
-## Roadmap
-
-### Changelog
-
-The changelog can be found in the [CHANGELOG.md](CHANGELOG.md) file.
-
-## Get in touch with a developer
-
-If you want to report an issue see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more info.
-
-We will be happy to answer your other questions at {email@example.tld}
-
-## License
-
-{Project} is made available under the {license type} license. See the [LICENSE file](LICENSE) for more info.
+## Other
+If you have any question please let us know via `info@coffeeit.nl`. Or by contacting the project manager.

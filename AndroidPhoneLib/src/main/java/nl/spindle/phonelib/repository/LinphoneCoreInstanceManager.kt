@@ -18,10 +18,8 @@ import java.util.*
 private const val TAG = "LinphoneManager"
 private const val LINPHONE_DEBUG_TAG = "SIMPLE_LINPHONE"
 
-private const val BACK_CAM = 0
 private const val BITRATE_LIMIT = 36
 private const val DOWNLOAD_BANDWIDTH = 1536
-private const val PREFERRED_VIDEO_SIZE = "720p"
 private const val UPLOAD_BANDWIDTH = 1536
 
 class LinphoneCoreInstanceManager(private val mServiceContext: Context) : SimpleLinphoneCoreListener {
@@ -29,9 +27,9 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
     private var pathConfigurations: PathConfigurations
     private var timer: Timer? = null
 
-    private var linphoneCore: LinphoneCore? = null
+    private var linphoneCore: Core? = null
     val initialised: Boolean get() = linphoneCore != null && !destroyed
-    val safeLinphoneCore: LinphoneCore?
+    val safeLinphoneCore: Core?
         get() {
             return if (initialised) {
                 linphoneCore
@@ -42,7 +40,8 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
         }
 
     init {
-        LinphoneCoreFactory.instance().setDebugMode(true, LINPHONE_DEBUG_TAG)
+        //TODO: Make debuggable an option.
+        Factory.instance().setDebugMode(true, LINPHONE_DEBUG_TAG)
         pathConfigurations = PathConfigurations(mServiceContext.filesDir.absolutePath)
     }
 
@@ -56,12 +55,11 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
     private fun startLibLinphone(context: Context, audioCodecs: Set<Codec>) {
         try {
             copyAssetsFromPackage()
-            linphoneCore = LinphoneCoreFactory.instance().createLinphoneCore(this, pathConfigurations.linphoneConfigFile,
-                    pathConfigurations.linphoneFactoryConfigFile, null, context)
-            linphoneCore?.addListener(context as LinphoneCoreListener)
+            linphoneCore = Factory.instance().createCoreWithConfig(getConfig(), context)
+            linphoneCore?.addListener(context as CoreListener)
             try {
                 initLibLinphone(audioCodecs)
-            } catch (e: LinphoneCoreException) {
+            } catch (e: CoreException) {
                 Log.e(e)
                 return
             }
@@ -81,19 +79,15 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
     }
 
     @Synchronized
-    @Throws(LinphoneCoreException::class)
+    @Throws(CoreException::class)
     private fun initLibLinphone(audioCodecs: Set<Codec>) {
-        linphoneCore?.setContext(mServiceContext)
-        setUserAgent()
-        linphoneCore?.videoDevice = BACK_CAM
+        setUserAgent(null)
         linphoneCore?.remoteRingbackTone = pathConfigurations.ringSound
         linphoneCore?.ring = pathConfigurations.ringSound
 
-        linphoneCore?.setChatDatabasePath(pathConfigurations.linphoneChatDatabaseFile)
-        linphoneCore?.setCpuCount(Runtime.getRuntime().availableProcessors())
-        linphoneCore?.setPlayFile(pathConfigurations.pauseSound)
-        linphoneCore?.setRootCA(pathConfigurations.linphoneRootCaFile)
-        linphoneCore?.setTone(ToneID.CallWaiting, pathConfigurations.ringSound)
+        linphoneCore?.playFile = pathConfigurations.pauseSound
+        linphoneCore?.rootCa = pathConfigurations.linphoneRootCaFile
+        linphoneCore?.remoteRingbackTone = pathConfigurations.ringSound
 
         val migrationResult = linphoneCore!!.migrateToMultiTransport()
         Log.d(TAG, "Migration to multi transport result = $migrationResult")
@@ -101,28 +95,15 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
         linphoneCore?.enableEchoCancellation(true)
         linphoneCore?.enableAdaptiveRateControl(true)
         getConfig().setInt("audio", "codec_bitrate_limit", BITRATE_LIMIT)
-        linphoneCore?.setPreferredVideoSizeByName(PREFERRED_VIDEO_SIZE)
         linphoneCore?.downloadBandwidth = DOWNLOAD_BANDWIDTH
         linphoneCore?.uploadBandwidth = UPLOAD_BANDWIDTH
-        linphoneCore?.setVideoPolicy(linphoneCore!!.videoAutoInitiatePolicy, linphoneCore!!.videoAutoAcceptPolicy)
-        linphoneCore?.enableVideo(true, true)
         setCodecMime(audioCodecs)
     }
 
-    private fun setCodecMime(audioCodecs: Set<Codec>) {
-        for (payloadType in linphoneCore!!.audioCodecs) {
-            try {
-                linphoneCore?.enablePayloadType(payloadType, audioCodecs.contains(Codec.valueOf(payloadType.mime.toUpperCase(Locale.ROOT))))
-            } catch (e: LinphoneCoreException) {
-                e.printStackTrace()
-            }
-        }
-        for (payloadType in linphoneCore!!.videoCodecs) {
-            try {
-                Log.e(TAG, "setCodecMime: mime: " + payloadType.mime + " rate: " + payloadType.rate)
-                linphoneCore?.enablePayloadType(payloadType, true)
-            } catch (e: LinphoneCoreException) {
-                e.printStackTrace()
+    fun setCodecMime(audioCodecs: Set<Codec>) {
+        linphoneCore?.let {
+            for (payloadType in it.audioPayloadTypes) {
+                payloadType.enable(audioCodecs.contains(Codec.valueOf(payloadType.mimeType.toUpperCase(Locale.ROOT))))
             }
         }
     }
@@ -138,14 +119,16 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
         copyIfNotExist(mServiceContext, R.raw.rootca, pathConfigurations.linphoneRootCaFile)
     }
 
-    private fun setUserAgent() {
+    @Suppress("DEPRECATION")
+    internal fun setUserAgent(userAgent: String?) {
         try {
-            val versionName = mServiceContext.packageManager.getPackageInfo(mServiceContext.packageName,
-                    0).versionName ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                mServiceContext.packageManager.getPackageInfo(mServiceContext.packageName, 0).longVersionCode.toString()
-            } else {
-                mServiceContext.packageManager.getPackageInfo(mServiceContext.packageName, 0).versionCode.toString()
-            }
+            val versionName = userAgent
+                    ?: mServiceContext.packageManager.getPackageInfo(mServiceContext.packageName,
+                            0).versionName ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        mServiceContext.packageManager.getPackageInfo(mServiceContext.packageName, 0).longVersionCode.toString()
+                    } else {
+                        mServiceContext.packageManager.getPackageInfo(mServiceContext.packageName, 0).versionCode.toString()
+                    }
 
             linphoneCore?.setUserAgent(System.getProperty("http.agent"), versionName)
         } catch (e: PackageManager.NameNotFoundException) {
@@ -175,9 +158,9 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
         inputStream.close()
     }
 
-    private fun getConfig(): LpConfig {
+    private fun getConfig(): Config {
         return safeLinphoneCore?.config
-                ?: LinphoneCoreFactory.instance().createLpConfig(pathConfigurations.linphoneConfigFile)
+                ?: Factory.instance().createConfig(pathConfigurations.linphoneConfigFile)
     }
 
     @Synchronized
@@ -189,11 +172,18 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
     private fun doDestroy() {
         try {
             timer?.cancel()
-            linphoneCore?.destroy()
         } catch (e: RuntimeException) {
             e.printStackTrace()
         } finally {
             linphoneCore = null
         }
+    }
+
+    override fun onRegistrationStateChanged(lc: Core?, cfg: ProxyConfig?, cstate: RegistrationState?, message: String?) {
+
+    }
+
+    override fun onCallStateChanged(lc: Core?, call: Call?, cstate: Call.State?, message: String?) {
+
     }
 }

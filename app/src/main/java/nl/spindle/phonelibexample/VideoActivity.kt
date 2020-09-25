@@ -19,7 +19,7 @@ class VideoActivity : AppCompatActivity() {
         val intentFilter = IntentFilter(RECEIVE_FINISH_VIDEO_ACTIVITY)
         mReceiver = FinishVideoActivityReceiver()
         registerReceiver(mReceiver, intentFilter)
-        PhoneLib.getInstance(this).initialiseVideoViews(arrayOf(video_rendering), arrayOf(video_preview))
+//        PhoneLib.getInstance(this).initialiseVideoViews(arrayOf(video_rendering), arrayOf(video_preview))
         setClickListeners()
     }
 
@@ -29,11 +29,7 @@ class VideoActivity : AppCompatActivity() {
         }
 
         video_mute.setOnClickListener {
-            PhoneLib.getInstance(this).setMuteMicrophone(PhoneLib.getInstance(this).isMicrophoneMuted())
-        }
-
-        video_speaker.setOnClickListener {
-            PhoneLib.getInstance(this).setSpeaker(PhoneLib.getInstance(this).isSpeakerOn())
+            PhoneLib.getInstance(this).setMicrophone(PhoneLib.getInstance(this).isMicrophoneMuted())
         }
     }
 

@@ -22,6 +22,9 @@ allprojects {
             dirs project(':AndroidPhoneLib').file('libs')
         }
         google()
+        maven {
+            url "https://linphone.org/maven_repository/"
+        }
     }
 }
 

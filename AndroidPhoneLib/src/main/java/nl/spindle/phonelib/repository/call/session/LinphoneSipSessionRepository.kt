@@ -6,9 +6,9 @@ import nl.spindle.phonelib.model.Session
 import nl.spindle.phonelib.model.SoftPhone
 import nl.spindle.phonelib.repository.LinphoneCoreInstanceManager
 import nl.spindle.phonelib.service.LinphoneService
-import org.linphone.core.LinphoneAddress
-import org.linphone.core.LinphoneCall
-import org.linphone.core.LinphoneCoreException
+import org.linphone.core.Address
+import org.linphone.core.Call
+import org.linphone.core.CoreException
 
 private const val TAG = "LinphoneSipSession"
 
@@ -21,7 +21,7 @@ class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: Linp
     override fun acceptIncoming(session: Session) {
         try {
             linphoneCoreInstanceManager.safeLinphoneCore?.acceptCall(session.linphoneCall)
-        } catch (e: LinphoneCoreException) {
+        } catch (e: CoreException) {
             e.printStackTrace()
         }
     }
@@ -29,7 +29,7 @@ class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: Linp
     override fun declineIncoming(session: Session, reason: Reason) {
         try {
             linphoneCoreInstanceManager.safeLinphoneCore?.declineCall(session.linphoneCall, org.linphone.core.Reason.fromInt(reason.value))
-        } catch (e: LinphoneCoreException) {
+        } catch (e: CoreException) {
             e.printStackTrace()
         }
     }
@@ -55,32 +55,33 @@ class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: Linp
         return null
     }
 
-    private fun callTo(bean: SoftPhone, isVideoCall: Boolean) : LinphoneCall? {
-        val address: LinphoneAddress
-        var call: LinphoneCall? = null
+    private fun callTo(bean: SoftPhone, isVideoCall: Boolean) : Call? {
+        val address: Address
+        var call: Call? = null
         address = try {
-            linphoneCoreInstanceManager.safeLinphoneCore!!.interpretUrl(bean.userName + "@" + bean.host)
-        } catch (e: LinphoneCoreException) {
+            linphoneCoreInstanceManager.safeLinphoneCore!!.interpretUrl(bean.userName + "@" + bean.host)!!
+        } catch (e: CoreException) {
             e.printStackTrace()
             return null
         }
         address.displayName = bean.displayName
 
-        val params = linphoneCoreInstanceManager.safeLinphoneCore?.createCallParams(null)
-        params?.videoEnabled = isVideoCall
+        val params = linphoneCoreInstanceManager.safeLinphoneCore?.createCallParams(null) ?: return null
+        params.enableVideo(isVideoCall)
         if (isVideoCall) {
-            params?.enableLowBandwidth(false)
+            params.enableLowBandwidth(false)
         }
+
         try {
             call = linphoneCoreInstanceManager.safeLinphoneCore?.inviteAddressWithParams(address, params)
-        } catch (e: LinphoneCoreException) {
+        } catch (e: CoreException) {
             e.printStackTrace()
         }
         return call
     }
 
     override fun end(session: Session) {
-        linphoneCoreInstanceManager.safeLinphoneCore?.terminateCall(session.linphoneCall)
+        session.linphoneCall.terminate()
         if (linphoneCoreInstanceManager.safeLinphoneCore?.isInConference == true) {
             linphoneCoreInstanceManager.safeLinphoneCore?.terminateConference()
         }

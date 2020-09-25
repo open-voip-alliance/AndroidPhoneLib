@@ -1,46 +1,155 @@
 package nl.spindle.phonelib.service
 
 import org.linphone.core.*
-import java.nio.ByteBuffer
 
 /**
  * This interface hides the LinphoneCoreListener methods that aren't used in Simple Linphone with default implementations.
  */
-interface SimpleLinphoneCoreListener : LinphoneCoreListener {
+interface SimpleLinphoneCoreListener : CoreListener {
 
-    override fun authInfoRequested(linphoneCore: LinphoneCore, s: String, s1: String, s2: String) {}
-    override fun authenticationRequested(linphoneCore: LinphoneCore, linphoneAuthInfo: LinphoneAuthInfo, authMethod: LinphoneCore.AuthMethod) {}
-    override fun callStatsUpdated(linphoneCore: LinphoneCore, linphoneCall: LinphoneCall, linphoneCallStats: LinphoneCallStats) {}
-    override fun newSubscriptionRequest(linphoneCore: LinphoneCore, linphoneFriend: LinphoneFriend, s: String) {}
-    override fun notifyPresenceReceived(linphoneCore: LinphoneCore, linphoneFriend: LinphoneFriend) {}
-    override fun dtmfReceived(linphoneCore: LinphoneCore, linphoneCall: LinphoneCall, i: Int) {}
-    override fun notifyReceived(linphoneCore: LinphoneCore, linphoneCall: LinphoneCall, linphoneAddress: LinphoneAddress, bytes: ByteArray) {}
-    override fun transferState(linphoneCore: LinphoneCore, linphoneCall: LinphoneCall, state: LinphoneCall.State) {}
-    override fun infoReceived(linphoneCore: LinphoneCore, linphoneCall: LinphoneCall, linphoneInfoMessage: LinphoneInfoMessage) {}
-    override fun subscriptionStateChanged(linphoneCore: LinphoneCore, linphoneEvent: LinphoneEvent, subscriptionState: SubscriptionState) {}
-    override fun publishStateChanged(linphoneCore: LinphoneCore, linphoneEvent: LinphoneEvent, publishState: PublishState) {}
-    override fun show(linphoneCore: LinphoneCore) {}
-    override fun displayStatus(linphoneCore: LinphoneCore, s: String) {}
-    override fun displayMessage(linphoneCore: LinphoneCore, s: String) {}
-    override fun displayWarning(linphoneCore: LinphoneCore, s: String) {}
-    override fun fileTransferProgressIndication(linphoneCore: LinphoneCore, linphoneChatMessage: LinphoneChatMessage, linphoneContent: LinphoneContent, i: Int) {}
-    override fun fileTransferRecv(linphoneCore: LinphoneCore, linphoneChatMessage: LinphoneChatMessage, linphoneContent: LinphoneContent, bytes: ByteArray, i: Int) {}
-    override fun fileTransferSend(linphoneCore: LinphoneCore, linphoneChatMessage: LinphoneChatMessage, linphoneContent: LinphoneContent, byteBuffer: ByteBuffer, i: Int): Int {
-        return 0
+    override fun onNetworkReachable(lc: Core?, reachable: Boolean) {
+
     }
-    override fun callEncryptionChanged(linphoneCore: LinphoneCore, linphoneCall: LinphoneCall, b: Boolean, s: String) {}
-    override fun isComposingReceived(linphoneCore: LinphoneCore, linphoneChatRoom: LinphoneChatRoom) {}
-    override fun ecCalibrationStatus(linphoneCore: LinphoneCore, ecCalibratorStatus: LinphoneCore.EcCalibratorStatus, i: Int, o: Any) {}
-    override fun globalState(linphoneCore: LinphoneCore, globalState: LinphoneCore.GlobalState, s: String) {}
-    override fun uploadProgressIndication(linphoneCore: LinphoneCore, i: Int, i1: Int) {}
-    override fun uploadStateChanged(linphoneCore: LinphoneCore, logCollectionUploadState: LinphoneCore.LogCollectionUploadState, s: String) {}
-    override fun friendListCreated(linphoneCore: LinphoneCore, linphoneFriendList: LinphoneFriendList) {}
-    override fun friendListRemoved(linphoneCore: LinphoneCore, linphoneFriendList: LinphoneFriendList) {}
-    override fun networkReachableChanged(linphoneCore: LinphoneCore, b: Boolean) {}
-    override fun messageReceived(linphoneCore: LinphoneCore, linphoneChatRoom: LinphoneChatRoom, linphoneChatMessage: LinphoneChatMessage) {}
-    override fun messageReceivedUnableToDecrypted(linphoneCore: LinphoneCore, linphoneChatRoom: LinphoneChatRoom, linphoneChatMessage: LinphoneChatMessage) {}
-    override fun notifyReceived(linphoneCore: LinphoneCore, linphoneEvent: LinphoneEvent, s: String, linphoneContent: LinphoneContent) {}
-    override fun configuringStatus(linphoneCore: LinphoneCore, remoteProvisioningState: LinphoneCore.RemoteProvisioningState, s: String) {}
-    override fun callState(linphoneCore: LinphoneCore, linphoneCall: LinphoneCall, state: LinphoneCall.State, s: String) {}
-    override fun registrationState(linphoneCore: LinphoneCore, linphoneProxyConfig: LinphoneProxyConfig, registrationState: LinphoneCore.RegistrationState, s: String) {}
+
+    override fun onReferReceived(lc: Core?, referTo: String?) {
+    }
+
+    override fun onQrcodeFound(lc: Core?, result: String?) {
+    }
+
+    override fun onGlobalStateChanged(lc: Core?, gstate: GlobalState?, message: String?) {
+    }
+
+    override fun onSubscriptionStateChanged(lc: Core?, lev: Event?, state: SubscriptionState?) {
+
+    }
+
+    override fun onCallStatsUpdated(lc: Core?, call: Call?, stats: CallStats?) {
+
+    }
+
+    override fun onFriendListRemoved(lc: Core?, list: FriendList?) {
+        
+    }
+
+    override fun onChatRoomSubjectChanged(lc: Core?, cr: ChatRoom?) {
+        
+    }
+
+    override fun onCallCreated(lc: Core?, call: Call?) {
+
+    }
+
+    override fun onMessageReceivedUnableDecrypt(lc: Core?, room: ChatRoom?, message: ChatMessage?) {
+        
+    }
+
+    override fun onSubscribeReceived(lc: Core?, lev: Event?, subscribeEvent: String?, body: Content?) {
+        
+    }
+
+    override fun onMessageSent(lc: Core?, room: ChatRoom?, message: ChatMessage?) {
+        
+    }
+
+    override fun onNotifyPresenceReceivedForUriOrTel(lc: Core?, lf: Friend?, uriOrTel: String?, presenceModel: PresenceModel?) {
+        
+    }
+
+    override fun onChatRoomStateChanged(lc: Core?, cr: ChatRoom?, state: ChatRoom.State?) {
+        
+    }
+
+    override fun onChatRoomEphemeralMessageDeleted(lc: Core?, cr: ChatRoom?) {
+        
+    }
+
+    override fun onNotifyPresenceReceived(lc: Core?, lf: Friend?) {
+        
+    }
+
+    override fun onChatRoomRead(lc: Core?, room: ChatRoom?) {
+        
+    }
+
+    override fun onAuthenticationRequested(lc: Core?, authInfo: AuthInfo?, method: AuthMethod?) {
+        
+    }
+
+    override fun onCallLogUpdated(lc: Core?, newcl: CallLog?) {
+        
+    }
+
+    override fun onIsComposingReceived(lc: Core?, room: ChatRoom?) {
+        
+    }
+
+    override fun onEcCalibrationAudioUninit(lc: Core?) {
+        
+    }
+
+    override fun onNotifyReceived(lc: Core?, lev: Event?, notifiedEvent: String?, body: Content?) {
+        
+    }
+
+    override fun onCallEncryptionChanged(lc: Core?, call: Call?, on: Boolean, authenticationToken: String?) {
+
+    }
+
+    override fun onEcCalibrationResult(lc: Core?, status: EcCalibratorStatus?, delayMs: Int) {
+        
+    }
+
+
+    override fun onLogCollectionUploadProgressIndication(lc: Core?, offset: Int, total: Int) {
+        
+    }
+
+    override fun onPublishStateChanged(lc: Core?, lev: Event?, state: PublishState?) {
+        
+    }
+
+    override fun onFriendListCreated(lc: Core?, list: FriendList?) {
+        
+    }
+
+    override fun onConfiguringStatus(lc: Core?, status: ConfiguringState?, message: String?) {
+        
+    }
+
+    override fun onLogCollectionUploadStateChanged(lc: Core?, state: Core.LogCollectionUploadState?, info: String?) {
+        
+    }
+
+    override fun onMessageReceived(lc: Core?, room: ChatRoom?, message: ChatMessage?) {
+        
+    }
+
+    override fun onBuddyInfoUpdated(lc: Core?, lf: Friend?) {
+        
+    }
+
+    override fun onTransferStateChanged(lc: Core?, transfered: Call?, newCallState: Call.State?) {
+        
+    }
+
+    override fun onInfoReceived(lc: Core?, call: Call?, msg: InfoMessage?) {
+        
+    }
+    
+    override fun onNewSubscriptionRequested(lc: Core?, lf: Friend?, url: String?) {
+        
+    }
+
+    override fun onDtmfReceived(lc: Core?, call: Call?, dtmf: Int) {
+        
+    }
+
+    override fun onEcCalibrationAudioInit(lc: Core?) {
+        
+    }
+
+    override fun onVersionUpdateCheckResultReceived(lc: Core?, result: VersionUpdateCheckResult?, version: String?, url: String?) {
+        
+    }
 }

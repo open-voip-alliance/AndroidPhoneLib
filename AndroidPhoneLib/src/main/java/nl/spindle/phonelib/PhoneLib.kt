@@ -10,7 +10,7 @@ import nl.spindle.phonelib.model.Session
 import nl.spindle.phonelib.model.Codec
 import nl.spindle.phonelib.model.Reason
 import nl.spindle.phonelib.presentation.call.video.SipVideoPresenter
-import nl.spindle.phonelib.repository.call.codecs.SipCodecsRepository
+import nl.spindle.phonelib.repository.call.codecs.SipConfigurationsRepository
 import nl.spindle.phonelib.repository.call.controls.SipActiveCallControlsRepository
 import nl.spindle.phonelib.repository.call.session.SipSessionRepository
 import nl.spindle.phonelib.repository.call.video.SipVideoCallRepository
@@ -28,7 +28,7 @@ class PhoneLib private constructor(
     private val sipInitialiseRepository: SipInitialiseRepository by injection.inject()
     private val sipRegisterRepository: SipRegisterRepository by injection.inject()
 
-    private val sipCodecsRepository: SipCodecsRepository by injection.inject()
+    private val sipCodecsRepository: SipConfigurationsRepository by injection.inject()
 
     private val sipCallControlsRepository: SipActiveCallControlsRepository by injection.inject()
     private val sipSessionRepository: SipSessionRepository by injection.inject()
@@ -39,39 +39,63 @@ class PhoneLib private constructor(
     /**
      * This needs to be called whenever this library needs to initialise. Without it, no other calls
      * can be done.
-     * @param context the application context
      */
-    fun initialise(context: Context) = sipInitialiseRepository.initialise(context)
+    fun initialise() = sipInitialiseRepository.initialise()
 
     /**
      * This registers your user on SIP. You need this before placing a call.
      * @param username the SIP username
      * @param password the SIP password
      * @param domain the SIP server IP or host
-     * @param port the SIP server port
+     * @param port the SIP server
+     * @param stunServer the stun server url, may be null
+     * @param encrypted whether you want to connect with TLS and SRTP
      * @param registrationCallback the registration callback that will be called when registration succeeds or fails
      */
-    fun register(username: String, password: String, domain: String, port: String, registrationCallback: RegistrationCallback)
-            = sipRegisterRepository.registerUser(username, password, domain, port, registrationCallback)
+    fun register(username: String, password: String, domain: String, port: String, stunServer: String?, encrypted: Boolean, registrationCallback: RegistrationCallback)
+            = sipRegisterRepository.registerUser(username, password, domain, port, stunServer, encrypted, registrationCallback)
 
     /**
      * This unregisters your user on SIP.
      */
-    fun unregister()
-            = sipRegisterRepository.unregister()
+    fun unregister() = sipRegisterRepository.unregister()
+
 
     /**
      * Set the audio codecs you want to support, if none set all are selected, options are visible in @see nl.spindle.phonelib.model.Codec.
      * @param codecs the codecs you want to support
      */
-    fun setAudioCodecs(context: Context, codecs: Set<Codec>)
-            = sipCodecsRepository.setAudioCodecs(context, codecs)
+    fun setAudioCodecs(codecs: Set<Codec>) = sipCodecsRepository.setAudioCodecs(codecs)
+
+    /**
+     * Gets all enabled audio codecs. Warning: this doesn't mean they are supported.
+     */
+    fun getAudioCodecs(): Set<Codec>
+            = sipCodecsRepository.getAudioCodecs()
 
     /**
      * Remove preferences for audio codecs and support all available codecs again @see nl.spindle.phonelib.model.Codec.
      */
-    fun resetAudioCodecs(context: Context)
-            = sipCodecsRepository.resetAudioCodecs(context)
+    fun resetAudioCodecs() = sipCodecsRepository.resetAudioCodecs()
+
+    /**
+     * It is not necessary to set this, we use versionCode.toString() by default to set this. Only necessary when you want to set it yourself.
+     * @param userAgent the custom useragent string
+     */
+    fun setUserAgent(userAgent: String)
+            = sipCodecsRepository.setUserAgent(userAgent)
+
+    /**
+     * Gets the userAgent if it is customized.
+     */
+    fun getUserAgent(): String?
+            = sipCodecsRepository.getUserAgent()
+
+    /**
+     * Remove preferences for the UserAgent.
+     */
+    fun resetUserAgent()
+            = sipCodecsRepository.resetUserAgent()
 
     /**
      * Set a callback to listen to call changes where needed.
@@ -99,12 +123,13 @@ class PhoneLib private constructor(
     fun callTo(number: String, video: Boolean): Session? = sipSessionRepository.callTo(number, video)
 
 
+    /** --Control an incoming call-- */
     /**
      * Accepts the current incoming session/call when it exists
      */
     @RequiresPermission(RECORD_AUDIO)
     fun acceptIncoming(session: Session) = sipSessionRepository.acceptIncoming(session)
-    
+
     /**
      * Declines the current incoming session/call when it exists
      */
@@ -117,37 +142,55 @@ class PhoneLib private constructor(
     fun end(session: Session) = sipSessionRepository.end(session)
 
 
+    /** --Controlling an active call-- */
     /**
      * Turns microphone off or on.
      * @param on If true, the microphone will turn off or stay off. If false it will turn on or stay on.
      */
-    fun setMuteMicrophone(on: Boolean) = sipCallControlsRepository.setMicrophone(on)
+    fun setMicrophone(on: Boolean) = sipCallControlsRepository.setMicrophone(on)
 
     /**
-     * Turns speaker off or on.
-     * @param on If true, the speaker will turn on or stay on. If false it will turn off or stay off.
+     * Transfer a session to a number unattended.
+     * @param from The session you want to control.
+     * @param to The number you want to call to.
      */
-    fun setSpeaker(on: Boolean) = sipCallControlsRepository.setSpeaker(on)
+    fun transferUnattended(from: Session, to: String) = sipCallControlsRepository.transferUnattended(from, to)
+
+    /**
+     * Pause a session.
+     * @param from The session you want to pause.
+     */
+    fun pauseSession(session: Session) = sipCallControlsRepository.pauseSession(session)
+
+    /**
+     * Resume a session.
+     * @param session The session you want to resume.
+     */
+    fun resumeSession(session: Session) = sipCallControlsRepository.resumeSession(session)
+
+    /**
+     * Switch between sessions.
+     * @param from The session you want to pause.
+     * @param to The number you want to resume.
+     */
+    fun switchSession(from: Session, to: Session) = sipCallControlsRepository.switchSession(from, to)
 
     /**
      * Turns session on hold or off.
      * @param session The session you want to control.
-     * @param on If true, the speaker will turn on or stay on. If false it will turn off or stay off.
+     * @param on If true, hold will turn on or stay on. If false it will turn off or stay off.
      */
     fun setHold(session: Session, on: Boolean) = sipCallControlsRepository.setHold(session, on)
 
 
+    /** --Get call states-- */
     /**
      * @return true if the mic is muted and false when it is not.
      */
     fun isMicrophoneMuted() = sipCallControlsRepository.isMicrophoneMuted()
 
-    /**
-     * @return true if the speaker is muted and false when it is not.
-     */
-    fun isSpeakerOn() = sipCallControlsRepository.isSpeakerEnabled()
 
-
+    /** --Video-- */
     /**
      * Needs to be initialise to display video calls.
      * @param renderingView to display the other parties' stream

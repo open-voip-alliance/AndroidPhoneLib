@@ -4,6 +4,7 @@
     <string name="accept_call">Accept call</string>
     <string name="audio_call">Audio call</string>
     <string name="dial_number">Dial number</string>
+    <string name="encrypted">Encrypted</string>
     <string name="hang_up">Hang up</string>
     <string name="login">Login</string>
     <string name="mute">Mute</string>
@@ -17,4 +18,7 @@
     <string name="hold">Hold</string>
     <string name="unregister">Unregister</string>
     <string name="successfully_unregistered">Successfully unregistered</string>
+    <string name="transfer">Transfer</string>
+    <string name="add_call">Add call</string>
+    <string name="switch_calls">Switch calls</string>
 </resources>

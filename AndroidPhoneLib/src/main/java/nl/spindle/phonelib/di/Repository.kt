@@ -2,8 +2,8 @@ package nl.spindle.phonelib.di
 
 import nl.spindle.phonelib.presentation.call.video.LinphoneSipVideoPresenter
 import nl.spindle.phonelib.repository.LinphoneCoreInstanceManager
-import nl.spindle.phonelib.repository.call.codecs.DefaultSipCodecsRepository
-import nl.spindle.phonelib.repository.call.codecs.SipCodecsRepository
+import nl.spindle.phonelib.repository.call.codecs.DefaultSipConfigurationsRepository
+import nl.spindle.phonelib.repository.call.codecs.SipConfigurationsRepository
 import nl.spindle.phonelib.repository.call.controls.LinphoneSipActiveCallControlsRepository
 import nl.spindle.phonelib.repository.call.controls.SipActiveCallControlsRepository
 import nl.spindle.phonelib.repository.call.session.LinphoneSipSessionRepository
@@ -28,10 +28,10 @@ val presentationModule = module {
 
 @Suppress("USELESS_CAST")
 val repositoryModule = module {
-    single { LinphoneSipInitialiseRepository(get()) as SipInitialiseRepository }
+    single { LinphoneSipInitialiseRepository(get(), get()) as SipInitialiseRepository }
     single { LinphoneSipRegisterRepository(get()) as SipRegisterRepository }
 
-    single { DefaultSipCodecsRepository() as SipCodecsRepository }
+    single { DefaultSipConfigurationsRepository(get(), get()) as SipConfigurationsRepository }
 
     single { LinphoneSipActiveCallControlsRepository(get()) as SipActiveCallControlsRepository  }
     single { LinphoneSipSessionRepository(get()) as SipSessionRepository }

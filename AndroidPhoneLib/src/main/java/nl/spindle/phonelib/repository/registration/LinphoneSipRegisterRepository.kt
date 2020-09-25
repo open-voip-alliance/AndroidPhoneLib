@@ -1,38 +1,69 @@
 package nl.spindle.phonelib.repository.registration
 
+import android.R.attr
 import nl.spindle.phonelib.repository.LinphoneCoreInstanceManager
 import nl.spindle.phonelib.service.LinphoneService
 import nl.spindle.phonelib.service.LinphoneService.Companion.ensureReady
 import nl.spindle.phonelib.service.LinphoneService.Companion.setRegistrationCallback
-import org.linphone.core.LinphoneCoreException
-import org.linphone.core.LinphoneCoreFactory
+import org.linphone.core.*
 
-class LinphoneSipRegisterRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipRegisterRepository {
+private const val RANDOM_PORT =  -1
 
-    @Throws(LinphoneCoreException::class)
-    override fun registerUser(name: String, password: String, domain: String, port: String, registrationCallback: RegistrationCallback) {
+internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipRegisterRepository {
+
+    @Throws(CoreException::class)
+    override fun registerUser(name: String, password: String, domain: String, port: String, stunServer: String?, encrypted: Boolean, registrationCallback: RegistrationCallback) {
         ensureReady {
             setRegistrationCallback(registrationCallback)
             LinphoneService.sServerIP = "$domain:$port"
             try {
                 val identify = "sip:$name@$domain:$port"
                 val proxy = "sip:$domain:$port"
-                val proxyAddr = LinphoneCoreFactory.instance().createLinphoneAddress(proxy)
-                val identifyAddr = LinphoneCoreFactory.instance().createLinphoneAddress(identify)
-                val authInfo = LinphoneCoreFactory.instance().createAuthInfo(name, null, password,
+                val identifyAddress = Factory.instance().createAddress(identify)
+                val authInfo = Factory.instance().createAuthInfo(name, name, password,
                         null, null, "$domain:$port")
-                val prxCfg = linphoneCoreInstanceManager.safeLinphoneCore?.createProxyConfig(identifyAddr.asString(),
-                        proxyAddr.asStringUriOnly(), proxyAddr.asStringUriOnly(), true)
-                prxCfg?.enableAvpf(false)
-                prxCfg?.avpfRRInterval = 0
+                authInfo.algorithm = null
+
+                if (encrypted) {
+                    val transports: Transports = linphoneCoreInstanceManager.safeLinphoneCore?.transports!!
+                    transports.udpPort = attr.port
+                    transports.tcpPort = attr.port
+                    transports.tlsPort = RANDOM_PORT
+                    linphoneCoreInstanceManager.safeLinphoneCore?.transports = transports
+                    linphoneCoreInstanceManager.safeLinphoneCore?.mediaEncryption = MediaEncryption.SRTP
+                    linphoneCoreInstanceManager.safeLinphoneCore?.isMediaEncryptionMandatory = true
+                }
+
+                val prxCfg = linphoneCoreInstanceManager.safeLinphoneCore?.createProxyConfig()
+
+                prxCfg?.enableRegister(true)
+
                 prxCfg?.enableQualityReporting(false)
                 prxCfg?.qualityReportingCollector = null
                 prxCfg?.qualityReportingInterval = 0
-                prxCfg?.enableRegister(true)
+                prxCfg?.identityAddress = identifyAddress
+
+                prxCfg?.avpfRrInterval = 0
+                prxCfg?.avpfMode = AVPFMode.Disabled
+
+                prxCfg?.serverAddr = proxy
+                prxCfg?.done()
+
+                stunServer?.let {
+                    linphoneCoreInstanceManager.safeLinphoneCore?.stunServer = it
+                }
+
                 linphoneCoreInstanceManager.safeLinphoneCore?.addProxyConfig(prxCfg)
                 linphoneCoreInstanceManager.safeLinphoneCore?.addAuthInfo(authInfo)
                 linphoneCoreInstanceManager.safeLinphoneCore?.defaultProxyConfig = prxCfg
-            } catch (e: LinphoneCoreException) {
+
+                linphoneCoreInstanceManager.safeLinphoneCore?.ensureRegistered()
+                linphoneCoreInstanceManager.safeLinphoneCore?.refreshRegisters()
+
+                linphoneCoreInstanceManager.safeLinphoneCore?.useRfc2833ForDtmf = true
+                linphoneCoreInstanceManager.safeLinphoneCore?.enableIpv6(true)
+
+            } catch (e: CoreException) {
                 e.printStackTrace()
             }
         }
@@ -46,7 +77,7 @@ class LinphoneSipRegisterRepository(private val linphoneCoreInstanceManager: Lin
             it.done()
             linphoneCoreInstanceManager.safeLinphoneCore?.removeProxyConfig(it)
         }
-        linphoneCoreInstanceManager.safeLinphoneCore?.authInfosList?.forEach {
+        linphoneCoreInstanceManager.safeLinphoneCore?.authInfoList?.forEach {
             linphoneCoreInstanceManager.safeLinphoneCore?.removeAuthInfo(it)
         }
     }

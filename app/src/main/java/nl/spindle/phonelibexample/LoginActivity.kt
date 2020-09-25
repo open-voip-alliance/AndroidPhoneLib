@@ -24,7 +24,7 @@ class LoginActivity : AppCompatActivity() {
         if (LinphoneService.isInitialised) {
             goToMainActivity()
         } else {
-            PhoneLib.getInstance(this).initialise(this)
+            PhoneLib.getInstance(this).initialise()
         }
     }
 
@@ -34,7 +34,10 @@ class LoginActivity : AppCompatActivity() {
             val password = sip_password.text.toString()
             val serverIP = sip_server.text.toString()
             val port = sip_port.text.toString()
-            PhoneLib.getInstance(this).register(account, password, serverIP, port, object : RegistrationCallback() {
+            val encrypted = sip_encrypted.isChecked
+            PhoneLib.getInstance(this).unregister()
+            PhoneLib.getInstance(this).resetAudioCodecs()
+            PhoneLib.getInstance(this).register(account, password, serverIP, port, null, encrypted, object : RegistrationCallback() {
                 override fun stateChanged(registrationState: RegistrationState) {
                     super.stateChanged(registrationState)
                     when (registrationState) {
@@ -43,6 +46,8 @@ class LoginActivity : AppCompatActivity() {
                             goToMainActivity()
                         }
                         RegistrationState.CLEARED -> Toast.makeText(this@LoginActivity, getString(R.string.successfully_unregistered), Toast.LENGTH_SHORT).show()
+                        RegistrationState.NONE -> Log.d(TAG, "registrationNONE: ")
+                        RegistrationState.UNKNOWN -> Log.d(TAG, "registrationUnknown: ")
                         else -> {
                             Log.e(TAG, "registrationFailed: ")
                             Toast.makeText(this@LoginActivity, getString(R.string.registration_failed), Toast.LENGTH_SHORT).show()

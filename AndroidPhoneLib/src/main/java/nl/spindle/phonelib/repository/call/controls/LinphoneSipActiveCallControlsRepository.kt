@@ -6,26 +6,35 @@ import nl.spindle.phonelib.repository.LinphoneCoreInstanceManager
 class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipActiveCallControlsRepository {
 
     override fun setMicrophone(on: Boolean) {
-        linphoneCoreInstanceManager.safeLinphoneCore?.muteMic(on)
-    }
-
-    override fun setSpeaker(on: Boolean) {
-        linphoneCoreInstanceManager.safeLinphoneCore?.enableSpeaker(on)
+        linphoneCoreInstanceManager.safeLinphoneCore?.enableMic(on)
     }
 
     override fun setHold(session: Session, on: Boolean) {
         if (on) {
-            linphoneCoreInstanceManager.safeLinphoneCore?.pauseCall(session.linphoneCall)
+            session.linphoneCall.pause()
         } else {
-            linphoneCoreInstanceManager.safeLinphoneCore?.resumeCall(session.linphoneCall)
+            session.linphoneCall.resume()
         }
     }
 
     override fun isMicrophoneMuted(): Boolean {
-        return linphoneCoreInstanceManager.safeLinphoneCore?.isMicMuted ?: false
+        return linphoneCoreInstanceManager.safeLinphoneCore?.micEnabled() ?: false
     }
 
-    override fun isSpeakerEnabled(): Boolean {
-        return linphoneCoreInstanceManager.safeLinphoneCore?.isSpeakerEnabled ?: false
+    override fun transferUnattended(session: Session, to: String) {
+        session.linphoneCall.transfer(to)
+    }
+
+    override fun pauseSession(session: Session) {
+        session.linphoneCall.pause()
+    }
+
+    override fun resumeSession(session: Session) {
+        session.linphoneCall.resume()
+    }
+
+    override fun switchSession(from: Session, to: Session) {
+        from.linphoneCall.pause()
+        to.linphoneCall.resume()
     }
 }
