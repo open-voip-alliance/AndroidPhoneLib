@@ -10,7 +10,6 @@ import nl.spindle.phonelib.model.Session
 import nl.spindle.phonelib.model.Codec
 import nl.spindle.phonelib.model.Reason
 import nl.spindle.phonelib.presentation.call.video.SipVideoPresenter
-import nl.spindle.phonelib.repository.call.codecs.SipConfigurationsRepository
 import nl.spindle.phonelib.repository.call.controls.SipActiveCallControlsRepository
 import nl.spindle.phonelib.repository.call.session.SipSessionRepository
 import nl.spindle.phonelib.repository.call.video.SipVideoCallRepository
@@ -27,8 +26,6 @@ class PhoneLib private constructor(
 
     private val sipInitialiseRepository: SipInitialiseRepository by injection.inject()
     private val sipRegisterRepository: SipRegisterRepository by injection.inject()
-
-    private val sipCodecsRepository: SipConfigurationsRepository by injection.inject()
 
     private val sipCallControlsRepository: SipActiveCallControlsRepository by injection.inject()
     private val sipSessionRepository: SipSessionRepository by injection.inject()
@@ -65,37 +62,15 @@ class PhoneLib private constructor(
      * Set the audio codecs you want to support, if none set all are selected, options are visible in @see nl.spindle.phonelib.model.Codec.
      * @param codecs the codecs you want to support
      */
-    fun setAudioCodecs(codecs: Set<Codec>) = sipCodecsRepository.setAudioCodecs(codecs)
-
-    /**
-     * Gets all enabled audio codecs. Warning: this doesn't mean they are supported.
-     */
-    fun getAudioCodecs(): Set<Codec>
-            = sipCodecsRepository.getAudioCodecs()
-
-    /**
-     * Remove preferences for audio codecs and support all available codecs again @see nl.spindle.phonelib.model.Codec.
-     */
-    fun resetAudioCodecs() = sipCodecsRepository.resetAudioCodecs()
+    fun setAudioCodecs(codecs: Set<Codec>) = sipInitialiseRepository.setAudioCodecs(codecs)
 
     /**
      * It is not necessary to set this, we use versionCode.toString() by default to set this. Only necessary when you want to set it yourself.
+     *
      * @param userAgent the custom useragent string
      */
     fun setUserAgent(userAgent: String)
-            = sipCodecsRepository.setUserAgent(userAgent)
-
-    /**
-     * Gets the userAgent if it is customized.
-     */
-    fun getUserAgent(): String?
-            = sipCodecsRepository.getUserAgent()
-
-    /**
-     * Remove preferences for the UserAgent.
-     */
-    fun resetUserAgent()
-            = sipCodecsRepository.resetUserAgent()
+            = sipInitialiseRepository.setUserAgent(userAgent)
 
     /**
      * Set a callback to listen to call changes where needed.
