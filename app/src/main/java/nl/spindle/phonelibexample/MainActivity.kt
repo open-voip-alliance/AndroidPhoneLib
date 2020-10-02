@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import nl.spindle.phonelib.PhoneLib
+import nl.spindle.phonelib.model.AttendedTransferSession
 import nl.spindle.phonelib.model.Session
 import nl.spindle.phonelib.repository.initialise.SessionCallback
 import java.util.concurrent.TimeUnit
@@ -24,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var handler: Handler
     private var activeSession: Session? = null
     private var secondSession: Session? = null
+    private var attendedTransferSession: AttendedTransferSession? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +42,7 @@ class MainActivity : AppCompatActivity() {
                 accept_call.visibility = View.VISIBLE
                 hang_up.visibility = View.VISIBLE
                 transfer.visibility = View.VISIBLE
+                attended_transfer.visibility = View.VISIBLE
                 add_call.visibility = View.VISIBLE
                 switch_calls.visibility = View.VISIBLE
                 caller.text = incomingSession.getDisplayName
@@ -50,6 +53,7 @@ class MainActivity : AppCompatActivity() {
                 super.outgoingInit(session)
                 hang_up.visibility = View.VISIBLE
                 transfer.visibility = View.VISIBLE
+                attended_transfer.visibility = View.VISIBLE
                 add_call.visibility = View.VISIBLE
                 switch_calls.visibility = View.VISIBLE
             }
@@ -70,8 +74,10 @@ class MainActivity : AppCompatActivity() {
                 accept_call.visibility = View.GONE
                 hang_up.visibility = View.GONE
                 transfer.visibility = View.GONE
+                attended_transfer.visibility = View.GONE
                 add_call.visibility = View.GONE
                 switch_calls.visibility = View.GONE
+                merge_calls.visibility = View.GONE
                 call_buttons.visibility = View.GONE
                 call_data.visibility = View.GONE
                 activeSession = null
@@ -83,8 +89,10 @@ class MainActivity : AppCompatActivity() {
                 accept_call.visibility = View.GONE
                 hang_up.visibility = View.GONE
                 transfer.visibility = View.GONE
+                attended_transfer.visibility = View.GONE
                 add_call.visibility = View.GONE
                 switch_calls.visibility = View.GONE
+                merge_calls.visibility = View.GONE
                 call_buttons.visibility = View.GONE
                 call_data.visibility = View.GONE
                 activeSession = null
@@ -155,6 +163,17 @@ class MainActivity : AppCompatActivity() {
                     activeSession = newSession
                     secondSession = it
                 }
+            }
+        }
+        attended_transfer.setOnClickListener {
+            activeSession?.let {
+                attendedTransferSession = PhoneLib.getInstance(this@MainActivity).beginAttendedTransfer(it, dial_number.text.toString())
+                merge_calls.visibility = View.VISIBLE
+            }
+        }
+        merge_calls.setOnClickListener {
+            attendedTransferSession?.let {
+                PhoneLib.getInstance(this@MainActivity).finishAttendedTransfer(it)
             }
         }
         accept_call.setOnClickListener {

@@ -19,6 +19,8 @@
     <string name="unregister">Unregister</string>
     <string name="successfully_unregistered">Successfully unregistered</string>
     <string name="transfer">Transfer</string>
+    <string name="attended_transfer">Attd Transfer</string>
+    <string name="merge_calls">Merge Attd Transfer</string>
     <string name="add_call">Add call</string>
     <string name="switch_calls">Switch calls</string>
 </resources>

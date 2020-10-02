@@ -1,6 +1,7 @@
 package nl.spindle.phonelib.repository.call.controls
 
 import nl.spindle.phonelib.model.Session
+import nl.spindle.phonelib.model.AttendedTransferSession
 
 interface SipActiveCallControlsRepository {
     fun setMicrophone(on: Boolean)
@@ -10,6 +11,8 @@ interface SipActiveCallControlsRepository {
     fun isMicrophoneMuted(): Boolean
 
     fun transferUnattended(session: Session, to: String)
+
+    fun finishAttendedTransfer(attendedTransferSession: AttendedTransferSession)
 
     fun switchSession(from: Session, to: Session)
 
