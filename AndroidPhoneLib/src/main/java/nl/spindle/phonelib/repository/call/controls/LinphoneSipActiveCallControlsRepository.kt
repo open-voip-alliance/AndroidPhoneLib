@@ -1,6 +1,7 @@
 package nl.spindle.phonelib.repository.call.controls
 
 import nl.spindle.phonelib.model.Session
+import nl.spindle.phonelib.model.AttendedTransferSession
 import nl.spindle.phonelib.repository.LinphoneCoreInstanceManager
 
 class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipActiveCallControlsRepository {
@@ -23,6 +24,10 @@ class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceMa
 
     override fun transferUnattended(session: Session, to: String) {
         session.linphoneCall.transfer(to)
+    }
+
+    override fun finishAttendedTransfer(attendedTransferSession: AttendedTransferSession) {
+        attendedTransferSession.from.linphoneCall.transferToAnother(attendedTransferSession.to.linphoneCall)
     }
 
     override fun pauseSession(session: Session) {

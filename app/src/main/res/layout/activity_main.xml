@@ -69,6 +69,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="16dp">
+
         <Button
             android:id="@+id/hang_up"
             android:layout_width="wrap_content"
@@ -89,6 +90,19 @@
             android:layout_marginStart="16dp"
             android:background="@drawable/rounded_button_ripple"
             android:text="@string/transfer"
+            android:textColor="@color/colorAccent"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <Button
+            android:id="@+id/attended_transfer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:background="@drawable/rounded_button_ripple"
+            android:text="@string/attended_transfer"
             android:textColor="@color/colorAccent"
             android:visibility="gone"
             tools:visibility="visible" />
@@ -119,6 +133,18 @@
             android:layout_marginStart="16dp"
             android:background="@drawable/rounded_button_ripple"
             android:text="@string/switch_calls"
+            android:textColor="@color/colorAccent"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <Button
+            android:id="@+id/merge_calls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/rounded_button_ripple"
+            android:text="@string/merge_calls"
             android:textColor="@color/colorAccent"
             android:visibility="gone"
             tools:visibility="visible" />

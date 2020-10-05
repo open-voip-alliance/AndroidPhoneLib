@@ -9,6 +9,7 @@ import nl.spindle.phonelib.di.Injection
 import nl.spindle.phonelib.model.Session
 import nl.spindle.phonelib.model.Codec
 import nl.spindle.phonelib.model.Reason
+import nl.spindle.phonelib.model.AttendedTransferSession
 import nl.spindle.phonelib.presentation.call.video.SipVideoPresenter
 import nl.spindle.phonelib.repository.call.codecs.SipConfigurationsRepository
 import nl.spindle.phonelib.repository.call.controls.SipActiveCallControlsRepository
@@ -155,6 +156,30 @@ class PhoneLib private constructor(
      * @param to The number you want to call to.
      */
     fun transferUnattended(from: Session, to: String) = sipCallControlsRepository.transferUnattended(from, to)
+
+    /**
+     * Begin an attended transfer, putting the current call on hold and placing a call to a new user.
+     *
+     * @param from The session you want to control.
+     * @param to The number you want to transfer to.
+     */
+    @RequiresPermission(allOf = [CAMERA, RECORD_AUDIO])
+    fun beginAttendedTransfer(from: Session, to: String): AttendedTransferSession {
+        pauseSession(from)
+
+        val targetSession = callTo(to) ?: throw Exception("Unable to make call for target session")
+
+        resumeSession(targetSession)
+
+        return AttendedTransferSession(from, targetSession)
+    }
+
+    /**
+     * Complete a pending attended transfer, merging the two calls.
+     *
+     * @param attendedTransferSession The transfer session that should be merged.
+     */
+    fun finishAttendedTransfer(attendedTransferSession: AttendedTransferSession) = sipCallControlsRepository.finishAttendedTransfer(attendedTransferSession)
 
     /**
      * Pause a session.
