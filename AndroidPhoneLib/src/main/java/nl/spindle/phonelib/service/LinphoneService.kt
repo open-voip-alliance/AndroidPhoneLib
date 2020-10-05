@@ -6,20 +6,20 @@ import android.os.IBinder
 import android.util.Log
 import nl.spindle.phonelib.model.Session
 import nl.spindle.phonelib.repository.LinphoneCoreInstanceManager
-import nl.spindle.phonelib.repository.call.codecs.SipConfigurationsRepository
 import nl.spindle.phonelib.repository.initialise.SessionCallback
+import nl.spindle.phonelib.repository.initialise.SipInitialiseRepository
 import nl.spindle.phonelib.repository.registration.RegistrationCallback
 import org.koin.android.ext.android.inject
 import org.linphone.core.*
 
 class LinphoneService : Service(), SimpleLinphoneCoreListener {
     private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager by inject()
-    private val sipCodecsRepository: SipConfigurationsRepository by inject()
+    private val sipInitialiseRepository: SipInitialiseRepository by inject()
 
     override fun onCreate() {
         super.onCreate()
         Factory.instance()
-        linphoneCoreInstanceManager.initialiseLinphone(this@LinphoneService, sipCodecsRepository.getAudioCodecs())
+        linphoneCoreInstanceManager.initialiseLinphone(this@LinphoneService, sipInitialiseRepository.getAudioCodecs())
         instance = this
     }
 

@@ -36,7 +36,6 @@ class LoginActivity : AppCompatActivity() {
             val port = sip_port.text.toString()
             val encrypted = sip_encrypted.isChecked
             PhoneLib.getInstance(this).unregister()
-            PhoneLib.getInstance(this).resetAudioCodecs()
             PhoneLib.getInstance(this).register(account, password, serverIP, port, null, encrypted, object : RegistrationCallback() {
                 override fun stateChanged(registrationState: RegistrationState) {
                     super.stateChanged(registrationState)

@@ -2,10 +2,14 @@ package nl.spindle.phonelib.repository.initialise
 
 import android.content.Context
 import android.content.Intent
+import nl.spindle.phonelib.model.Codec
 import nl.spindle.phonelib.repository.LinphoneCoreInstanceManager
 import nl.spindle.phonelib.service.LinphoneService
 
 internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager, private val context: Context) : SipInitialiseRepository {
+
+    private var codecs = setOf(Codec.G722, Codec.G729, Codec.GSM, Codec.ILBC, Codec.ISAC, Codec.L16, Codec.OPUS,
+            Codec.PCMA, Codec.PCMU, Codec.SPEEX)
 
     override fun initialise() {
         if (!LinphoneService.isInitialised) {
@@ -26,4 +30,15 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
     override fun setSessionCallback(sessionCallback: SessionCallback?) {
         LinphoneService.setPhoneCallback(sessionCallback)
     }
+
+    override fun setUserAgent(userAgent: String) {
+        linphoneCoreInstanceManager.setUserAgent(userAgent)
+    }
+
+    override fun setAudioCodecs(codecs: Set<Codec>) {
+        this.codecs = codecs
+        linphoneCoreInstanceManager.setCodecMime(codecs)
+    }
+
+    override fun getAudioCodecs() = codecs
 }
