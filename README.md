@@ -170,7 +170,7 @@ The `Session` object contains all information about the session.
 `getDisplayName: String` returns the display name of the caller.
 `getPhoneNumber: String` returns the phone number of the caller.
 `getDuration: Int` returns the duration in seconds of the caller.
-`getReason: nl.spindle.phonelib.model.Reason` returns the reason of the session state.
+`getReason: org.openvoipalliance.phonelib.model.Reason` returns the reason of the session state.
 
 
 #### State can be:
