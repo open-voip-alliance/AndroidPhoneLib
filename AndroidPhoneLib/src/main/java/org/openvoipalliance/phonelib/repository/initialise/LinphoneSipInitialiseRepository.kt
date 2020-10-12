@@ -11,12 +11,20 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
     private var codecs = setOf(Codec.G722, Codec.G729, Codec.GSM, Codec.ILBC, Codec.ISAC, Codec.L16, Codec.OPUS,
             Codec.PCMA, Codec.PCMU, Codec.SPEEX)
 
+    private var logListener: LogListener? = null
+
     override fun initialise() {
         if (!LinphoneService.isInitialised) {
             val intent = Intent(Intent.ACTION_MAIN)
             intent.setClass(context, LinphoneService::class.java)
             context.startService(intent)
         }
+    }
+
+    override fun destroy() {
+        context.stopService(Intent().apply {
+            setClass(context, LinphoneService::class.java)
+        })
     }
 
     override fun refreshRegisters(): Boolean {
@@ -41,4 +49,10 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
     }
 
     override fun getAudioCodecs() = codecs
+
+    override fun getLogListener() = logListener
+
+    override fun setLogListener(listener: LogListener) {
+        this.logListener = listener
+    }
 }

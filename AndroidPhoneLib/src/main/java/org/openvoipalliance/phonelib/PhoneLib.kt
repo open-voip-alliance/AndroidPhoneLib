@@ -19,6 +19,7 @@ import org.openvoipalliance.phonelib.repository.initialise.SipInitialiseReposito
 import org.openvoipalliance.phonelib.repository.registration.RegistrationCallback
 import org.openvoipalliance.phonelib.repository.registration.SipRegisterRepository
 import org.koin.core.inject
+import org.openvoipalliance.phonelib.repository.initialise.LogListener
 
 class PhoneLib private constructor(
         context: Context
@@ -41,6 +42,15 @@ class PhoneLib private constructor(
     fun initialise() = sipInitialiseRepository.initialise()
 
     /**
+     * This should be called when you want to end all services involved in running the library.
+     *
+     */
+    fun destroy() {
+        unregister()
+        sipInitialiseRepository.destroy()
+    }
+
+    /**
      * This registers your user on SIP. You need this before placing a call.
      * @param username the SIP username
      * @param password the SIP password
@@ -57,7 +67,6 @@ class PhoneLib private constructor(
      * This unregisters your user on SIP.
      */
     fun unregister() = sipRegisterRepository.unregister()
-
 
     /**
      * Set the audio codecs you want to support, if none set all are selected, options are visible in @see org.openvoipalliance.phonelib.model.Codec.
@@ -78,6 +87,13 @@ class PhoneLib private constructor(
      * @param sessionCallback the session callback
      */
     fun setSessionCallback(sessionCallback: SessionCallback?) = sipInitialiseRepository.setSessionCallback(sessionCallback)
+
+    /**
+     * Set a listener to receive log events from the library.
+     *
+     * @param LogListener the listener
+     */
+    fun setLogListener(listener: LogListener) = sipInitialiseRepository.setLogListener(listener)
 
     /**
      * This method audio calls a phone number
@@ -189,6 +205,12 @@ class PhoneLib private constructor(
      */
     fun isMicrophoneMuted() = sipCallControlsRepository.isMicrophoneMuted()
 
+    /**
+     * Send a dtmf string.
+     *
+     */
+    fun sendDtmf(session: Session, dtmf: String) =
+        sipCallControlsRepository.sendDtmf(session, dtmf)
 
     /** --Video-- */
     /**
@@ -219,7 +241,6 @@ class PhoneLib private constructor(
      * Needs to be called in onDestroy or when destroyed to end a video call
      */
     fun onDestroyVideoCall() = sipVideoPresenter.onDestroy()
-
 
     companion object {
         private var instance: PhoneLib? = null

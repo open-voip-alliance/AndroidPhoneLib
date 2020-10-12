@@ -1,6 +1,7 @@
 package org.openvoipalliance.phonelib.model
 
 import org.linphone.core.Call
+import org.linphone.core.Call.Dir.*
 import org.linphone.core.Reason
 
 class Session(val linphoneCall: Call) {
@@ -44,4 +45,11 @@ class Session(val linphoneCall: Call) {
                 Reason.Unknown -> org.openvoipalliance.phonelib.model.Reason.UNKNOWN
                 else -> org.openvoipalliance.phonelib.model.Reason.UNKNOWN
             }
+
+    val callId = linphoneCall.callLog.callId
+
+    val direction = when (linphoneCall.callLog.dir) {
+        Outgoing -> Direction.OUTGOING
+        Incoming -> Direction.INCOMING
+    }
 }

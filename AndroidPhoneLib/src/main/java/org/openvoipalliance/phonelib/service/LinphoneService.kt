@@ -19,7 +19,7 @@ class LinphoneService : Service(), SimpleLinphoneCoreListener {
     override fun onCreate() {
         super.onCreate()
         Factory.instance()
-        linphoneCoreInstanceManager.initialiseLinphone(this@LinphoneService, sipInitialiseRepository.getAudioCodecs())
+        linphoneCoreInstanceManager.initialiseLinphone(this@LinphoneService, sipInitialiseRepository.getAudioCodecs(), sipInitialiseRepository.getLogListener())
         instance = this
     }
 
@@ -28,6 +28,7 @@ class LinphoneService : Service(), SimpleLinphoneCoreListener {
         Log.e(TAG, "LinphoneService onDestroy execute")
         removeAllCallbacks()
         linphoneCoreInstanceManager.destroy()
+        instance = null
     }
 
     override fun onBind(intent: Intent): IBinder? {

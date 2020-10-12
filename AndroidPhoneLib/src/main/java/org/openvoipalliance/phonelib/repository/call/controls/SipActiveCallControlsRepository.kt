@@ -19,4 +19,6 @@ interface SipActiveCallControlsRepository {
     fun pauseSession(session: Session)
 
     fun resumeSession(session: Session)
+
+    fun sendDtmf(session: Session, dtmf: String)
 }

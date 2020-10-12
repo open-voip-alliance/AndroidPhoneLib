@@ -33,8 +33,11 @@ android {
     }
 }
 
+
 dependencies {
-    implementation "org.linphone:linphone-sdk-android:4.4+"
+    implementation ("org.linphone:linphone-sdk-android:4.4+") {
+        transitive = true
+    }
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0'
@@ -52,3 +55,28 @@ dependencies {
 repositories {
     mavenCentral()
 }
+
+tasks.withType(Javadoc).all {
+    enabled = false
+}
+
+ext {
+    bintrayRepo = 'AndroidPhoneLib'
+    bintrayName = 'AndroidPhoneLib'
+    publishedGroupId = 'org.openvoipalliance'
+    libraryName = 'AndroidPhoneLib'
+    artifact = 'AndroidPhoneLib'
+    libraryDescription = 'An Android library to faciliate SIP communication.'
+    siteUrl = 'https://github.com/open-voip-alliance/AndroidPhoneLib'
+    gitUrl = 'https://github.com/open-voip-alliance/AndroidPhoneLib.git'
+    libraryVersion = '0.4.3'
+    developerId = 'jeremy.norman'
+    developerName = 'Jeremy Norman'
+    developerEmail = 'jeremy.norman@wearespindle.com'
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ['Apache-2.0']
+}
+
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'

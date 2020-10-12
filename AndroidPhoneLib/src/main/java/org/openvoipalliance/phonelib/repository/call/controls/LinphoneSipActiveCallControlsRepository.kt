@@ -19,7 +19,9 @@ class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceMa
     }
 
     override fun isMicrophoneMuted(): Boolean {
-        return linphoneCoreInstanceManager.safeLinphoneCore?.micEnabled() ?: false
+        val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return false
+
+        return !core.micEnabled()
     }
 
     override fun transferUnattended(session: Session, to: String) {
@@ -36,6 +38,14 @@ class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceMa
 
     override fun resumeSession(session: Session) {
         session.linphoneCall.resume()
+    }
+
+    override fun sendDtmf(session: Session, dtmf: String) {
+        if (dtmf.length == 1) {
+            session.linphoneCall.sendDtmf(dtmf[0])
+        } else {
+            session.linphoneCall.sendDtmfs(dtmf)
+        }
     }
 
     override fun switchSession(from: Session, to: Session) {

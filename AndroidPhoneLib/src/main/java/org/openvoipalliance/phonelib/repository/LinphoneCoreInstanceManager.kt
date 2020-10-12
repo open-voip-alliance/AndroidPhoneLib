@@ -10,7 +10,10 @@ import org.openvoipalliance.phonelib.model.Codec
 import org.openvoipalliance.phonelib.model.PathConfigurations
 import org.openvoipalliance.phonelib.service.SimpleLinphoneCoreListener
 import org.linphone.core.*
+import org.linphone.core.LogLevel.*
 import org.linphone.mediastream.Log
+import org.openvoipalliance.phonelib.repository.initialise.LogLevel
+import org.openvoipalliance.phonelib.repository.initialise.LogListener
 import java.io.File
 import java.io.IOException
 import java.util.*
@@ -28,6 +31,7 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
     private var timer: Timer? = null
 
     private var linphoneCore: Core? = null
+
     val initialised: Boolean get() = linphoneCore != null && !destroyed
     val safeLinphoneCore: Core?
         get() {
@@ -40,12 +44,23 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
         }
 
     init {
-        //TODO: Make debuggable an option.
         Factory.instance().setDebugMode(true, LINPHONE_DEBUG_TAG)
+
         pathConfigurations = PathConfigurations(mServiceContext.filesDir.absolutePath)
     }
 
-    fun initialiseLinphone(context: Context, audioCodecs: Set<Codec>) {
+    fun initialiseLinphone(context: Context, audioCodecs: Set<Codec>, listener: LogListener?) {
+        Factory.instance().loggingService.addListener { _, _, lev, message ->
+            listener?.onLogMessageWritten(when (lev) {
+                Debug -> LogLevel.DEBUG
+                Trace -> LogLevel.TRACE
+                Message -> LogLevel.MESSAGE
+                Warning -> LogLevel.WARNING
+                Error -> LogLevel.ERROR
+                Fatal -> LogLevel.FATAL
+            }, message)
+        }
+
         if (linphoneCore == null) {
             startLibLinphone(context, audioCodecs)
         }
@@ -82,6 +97,7 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
     @Throws(CoreException::class)
     private fun initLibLinphone(audioCodecs: Set<Codec>) {
         setUserAgent(null)
+
         linphoneCore?.remoteRingbackTone = pathConfigurations.ringSound
         linphoneCore?.ring = pathConfigurations.ringSound
 
@@ -98,6 +114,7 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context) : Simple
         linphoneCore?.downloadBandwidth = DOWNLOAD_BANDWIDTH
         linphoneCore?.uploadBandwidth = UPLOAD_BANDWIDTH
         setCodecMime(audioCodecs)
+        linphoneCore?.start()
     }
 
     fun setCodecMime(audioCodecs: Set<Codec>) {
