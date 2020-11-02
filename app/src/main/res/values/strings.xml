@@ -23,4 +23,5 @@
     <string name="merge_calls">Merge Attd Transfer</string>
     <string name="add_call">Add call</string>
     <string name="switch_calls">Switch calls</string>
+    <string name="logout">Logout</string>
 </resources>

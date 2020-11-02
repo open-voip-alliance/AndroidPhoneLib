@@ -63,6 +63,17 @@
             android:background="@drawable/rounded_button_ripple"
             android:text="@string/unregister"
             android:textColor="@color/colorAccent" />
+
+        <Button
+            android:id="@+id/logout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/rounded_button_ripple"
+            android:text="@string/logout"
+            android:textColor="@color/colorAccent" />
+
     </LinearLayout>
     <LinearLayout
         android:layout_width="wrap_content"

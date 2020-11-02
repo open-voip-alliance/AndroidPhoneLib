@@ -2,9 +2,9 @@ package org.openvoipalliance.phonelib.repository.initialise
 
 import android.content.Context
 import android.content.Intent
+import org.linphone.core.Factory
 import org.openvoipalliance.phonelib.model.Codec
 import org.openvoipalliance.phonelib.repository.LinphoneCoreInstanceManager
-import org.openvoipalliance.phonelib.service.LinphoneService
 
 internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager, private val context: Context) : SipInitialiseRepository {
 
@@ -14,17 +14,13 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
     private var logListener: LogListener? = null
 
     override fun initialise() {
-        if (!LinphoneService.isInitialised) {
-            val intent = Intent(Intent.ACTION_MAIN)
-            intent.setClass(context, LinphoneService::class.java)
-            context.startService(intent)
-        }
+        Factory.instance()
+        linphoneCoreInstanceManager.initialiseLinphone(context, getAudioCodecs(), getLogListener())
     }
 
     override fun destroy() {
-        context.stopService(Intent().apply {
-            setClass(context, LinphoneService::class.java)
-        })
+        LinphoneCoreInstanceManager.phoneCallback = null
+        linphoneCoreInstanceManager.destroy()
     }
 
     override fun refreshRegisters(): Boolean {
@@ -36,7 +32,7 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
     }
 
     override fun setSessionCallback(sessionCallback: SessionCallback?) {
-        LinphoneService.setPhoneCallback(sessionCallback)
+        LinphoneCoreInstanceManager.phoneCallback = sessionCallback
     }
 
     override fun setUserAgent(userAgent: String) {

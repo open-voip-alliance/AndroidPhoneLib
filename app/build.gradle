@@ -3,6 +3,9 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
 
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
 android {
     compileSdkVersion 29
     buildToolsVersion "28.0.3"
@@ -13,6 +16,10 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        resValue "string", "default_sip_user", properties.getProperty('sip.user', "")
+        resValue "string", "default_sip_password", properties.getProperty('sip.password', "")
+        resValue "string", "default_sip_server", properties.getProperty('sip.server', "")
+        resValue "string", "default_sip_port", properties.getProperty('sip.port', "5061")
     }
     buildTypes {
         release {

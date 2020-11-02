@@ -3,6 +3,7 @@ package org.openvoipalliance.phonelib
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
 import android.content.Context
+import android.os.Handler
 import android.view.SurfaceView
 import androidx.annotation.RequiresPermission
 import org.openvoipalliance.phonelib.di.Injection
@@ -42,15 +43,6 @@ class PhoneLib private constructor(
     fun initialise() = sipInitialiseRepository.initialise()
 
     /**
-     * This should be called when you want to end all services involved in running the library.
-     *
-     */
-    fun destroy() {
-        unregister()
-        sipInitialiseRepository.destroy()
-    }
-
-    /**
      * This registers your user on SIP. You need this before placing a call.
      * @param username the SIP username
      * @param password the SIP password
@@ -62,6 +54,11 @@ class PhoneLib private constructor(
      */
     fun register(username: String, password: String, domain: String, port: String, stunServer: String?, encrypted: Boolean, registrationCallback: RegistrationCallback)
             = sipRegisterRepository.registerUser(username, password, domain, port, stunServer, encrypted, registrationCallback)
+
+    fun destroy() {
+        unregister()
+        sipInitialiseRepository.destroy()
+    }
 
     /**
      * This unregisters your user on SIP.

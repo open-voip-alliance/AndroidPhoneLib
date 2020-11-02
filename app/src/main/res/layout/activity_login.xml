@@ -24,7 +24,8 @@
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:hint="@string/sip_account"/>
+        android:hint="@string/sip_account"
+        android:text="@string/default_sip_user"/>
 
     <EditText
         android:id="@+id/sip_password"
@@ -34,7 +35,8 @@
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:hint="@string/sip_password"/>
+        android:hint="@string/sip_password"
+        android:text="@string/default_sip_password"/>
 
     <EditText
         android:id="@+id/sip_server"
@@ -44,7 +46,8 @@
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:hint="@string/sip_server"/>
+        android:hint="@string/sip_server"
+        android:text="@string/default_sip_server"/>
 
     <EditText
         android:id="@+id/sip_port"
@@ -55,7 +58,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:hint="@string/sip_server"
-        android:text="5061"/>
+        android:text="@string/default_sip_port"/>
 
     <Switch
         android:id="@+id/sip_encrypted"

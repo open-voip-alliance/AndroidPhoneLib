@@ -5,7 +5,6 @@ import org.openvoipalliance.phonelib.model.Reason
 import org.openvoipalliance.phonelib.model.Session
 import org.openvoipalliance.phonelib.model.SoftPhone
 import org.openvoipalliance.phonelib.repository.LinphoneCoreInstanceManager
-import org.openvoipalliance.phonelib.service.LinphoneService
 import org.linphone.core.Address
 import org.linphone.core.Call
 import org.linphone.core.CoreException
@@ -40,7 +39,7 @@ class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: Linp
     }
 
     override fun callTo(number: String, isVideoCall: Boolean) : Session? {
-        if (!LinphoneService.isInitialised || !linphoneCoreInstanceManager.initialised) {
+        if (!linphoneCoreInstanceManager.initialised) {
             Log.e(TAG, "The LinphoneService isn't ready")
             return null
         }
@@ -50,7 +49,7 @@ class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: Linp
         }
         val phone = SoftPhone()
         phone.userName = number
-        phone.host = LinphoneService.sServerIP
+        phone.host = LinphoneCoreInstanceManager.serverIP
         callTo(phone, isVideoCall)?.let { return Session(it) }
         return null
     }

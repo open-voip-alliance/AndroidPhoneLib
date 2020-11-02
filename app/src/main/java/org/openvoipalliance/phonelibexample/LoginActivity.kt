@@ -9,7 +9,6 @@ import kotlinx.android.synthetic.main.activity_login.*
 import org.openvoipalliance.phonelib.PhoneLib
 import org.openvoipalliance.phonelib.model.RegistrationState
 import org.openvoipalliance.phonelib.repository.registration.RegistrationCallback
-import org.openvoipalliance.phonelib.service.LinphoneService
 
 class LoginActivity : AppCompatActivity() {
 
@@ -21,11 +20,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun handleCurrentState() {
-        if (LinphoneService.isInitialised) {
-            goToMainActivity()
-        } else {
-            PhoneLib.getInstance(this).initialise()
-        }
+        goToMainActivity()
     }
 
     private fun setOnClickListeners() {
@@ -35,10 +30,12 @@ class LoginActivity : AppCompatActivity() {
             val serverIP = sip_server.text.toString()
             val port = sip_port.text.toString()
             val encrypted = sip_encrypted.isChecked
+            PhoneLib.getInstance(this).initialise()
             PhoneLib.getInstance(this).unregister()
             PhoneLib.getInstance(this).register(account, password, serverIP, port, null, encrypted, object : RegistrationCallback() {
                 override fun stateChanged(registrationState: RegistrationState) {
                     super.stateChanged(registrationState)
+                    Log.i(TAG, "Registration State: ${registrationState.name}")
                     when (registrationState) {
                         RegistrationState.REGISTERED -> {
                             Toast.makeText(this@LoginActivity, getString(R.string.successfully_logged_in), Toast.LENGTH_SHORT).show()

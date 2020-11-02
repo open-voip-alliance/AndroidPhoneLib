@@ -196,6 +196,11 @@ class MainActivity : AppCompatActivity() {
                 PhoneLib.getInstance(this@MainActivity).setHold(it, checked)
             }
         }
+        logout.setOnClickListener {
+            PhoneLib.getInstance(this@MainActivity).destroy()
+            startActivity(Intent(this@MainActivity, LoginActivity::class.java))
+            finish()
+        }
     }
 
     private fun hasAudioCallPermissions(): Boolean {
