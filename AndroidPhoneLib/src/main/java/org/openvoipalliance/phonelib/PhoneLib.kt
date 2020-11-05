@@ -19,7 +19,7 @@ import org.openvoipalliance.phonelib.repository.initialise.SessionCallback
 import org.openvoipalliance.phonelib.repository.initialise.SipInitialiseRepository
 import org.openvoipalliance.phonelib.repository.registration.RegistrationCallback
 import org.openvoipalliance.phonelib.repository.registration.SipRegisterRepository
-import org.koin.core.inject
+import org.koin.core.component.inject
 import org.openvoipalliance.phonelib.repository.initialise.LogListener
 
 class PhoneLib private constructor(

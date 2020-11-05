@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import org.openvoipalliance.phonelib.di.Injection
 import org.openvoipalliance.phonelib.repository.initialise.SipInitialiseRepository
-import org.koin.core.inject
+import org.koin.core.component.inject
 
 class KeepAliveHandler : BroadcastReceiver() {
 

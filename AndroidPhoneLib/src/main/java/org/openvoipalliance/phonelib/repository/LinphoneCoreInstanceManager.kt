@@ -73,11 +73,12 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
             copyAssetsFromPackage()
             linphoneCore = Factory.instance().createCoreWithConfig(
                     Factory.instance().createConfig(pathConfigurations.linphoneConfigFile),
-                    context)
-            linphoneCore?.addListener(this)
-            linphoneCore?.enableDnsSrv(false)
-            linphoneCore?.enableDnsSearch(false)
-            linphoneCore?.start()
+                    context).apply {
+                addListener(this@LinphoneCoreInstanceManager)
+                enableDnsSrv(false)
+                enableDnsSearch(false)
+                start()
+            }
             initLibLinphone(audioCodecs)
 
             val task: TimerTask = object : TimerTask() {
@@ -110,21 +111,20 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
     private fun initLibLinphone(audioCodecs: Set<Codec>) {
         setUserAgent(null)
 
-        linphoneCore?.remoteRingbackTone = pathConfigurations.ringSound
-        linphoneCore?.ring = pathConfigurations.ringSound
+        linphoneCore?.apply {
+            remoteRingbackTone = pathConfigurations.ringSound
+            ring = null
+            playFile = pathConfigurations.pauseSound
+            rootCa = pathConfigurations.linphoneRootCaFile
+            remoteRingbackTone = pathConfigurations.ringSound
+            isNetworkReachable = true
+            enableEchoCancellation(true)
+            enableAdaptiveRateControl(true)
+            config?.setInt("audio", "codec_bitrate_limit", BITRATE_LIMIT)
+            downloadBandwidth = DOWNLOAD_BANDWIDTH
+            uploadBandwidth = UPLOAD_BANDWIDTH
+        }
 
-        linphoneCore?.playFile = pathConfigurations.pauseSound
-        linphoneCore?.rootCa = pathConfigurations.linphoneRootCaFile
-        linphoneCore?.remoteRingbackTone = pathConfigurations.ringSound
-
-        val migrationResult = linphoneCore!!.migrateToMultiTransport()
-        Log.d(TAG, "Migration to multi transport result = $migrationResult")
-        linphoneCore?.isNetworkReachable = true
-        linphoneCore?.enableEchoCancellation(true)
-        linphoneCore?.enableAdaptiveRateControl(true)
-        linphoneCore?.config?.setInt("audio", "codec_bitrate_limit", BITRATE_LIMIT)
-        linphoneCore?.downloadBandwidth = DOWNLOAD_BANDWIDTH
-        linphoneCore?.uploadBandwidth = UPLOAD_BANDWIDTH
         setCodecMime(audioCodecs)
         destroyed = false
     }
