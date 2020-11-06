@@ -1,10 +1,10 @@
 package org.openvoipalliance.phonelib.model
 
-import org.linphone.core.Call
+import org.linphone.core.Call as LinphoneCall
 import org.linphone.core.Call.Dir.*
 import org.linphone.core.Reason
 
-class Session(val linphoneCall: Call) {
+class Call(val linphoneCall: LinphoneCall) {
 
     val quality
         get() = Quality(linphoneCall.averageQuality, linphoneCall.currentQuality)

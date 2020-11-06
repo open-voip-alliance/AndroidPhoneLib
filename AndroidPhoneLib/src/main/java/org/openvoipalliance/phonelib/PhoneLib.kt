@@ -3,12 +3,10 @@ package org.openvoipalliance.phonelib
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.RECORD_AUDIO
 import android.content.Context
-import android.os.Handler
 import android.view.SurfaceView
 import androidx.annotation.RequiresPermission
 import org.openvoipalliance.phonelib.di.Injection
-import org.openvoipalliance.phonelib.model.Session
-import org.openvoipalliance.phonelib.model.Codec
+import org.openvoipalliance.phonelib.model.Call
 import org.openvoipalliance.phonelib.model.Reason
 import org.openvoipalliance.phonelib.model.AttendedTransferSession
 import org.openvoipalliance.phonelib.presentation.call.video.SipVideoPresenter
@@ -20,7 +18,7 @@ import org.openvoipalliance.phonelib.repository.initialise.SipInitialiseReposito
 import org.openvoipalliance.phonelib.repository.registration.RegistrationCallback
 import org.openvoipalliance.phonelib.repository.registration.SipRegisterRepository
 import org.koin.core.component.inject
-import org.openvoipalliance.phonelib.repository.initialise.LogListener
+import org.openvoipalliance.phonelib.config.Config
 
 class PhoneLib private constructor(
         context: Context
@@ -40,20 +38,12 @@ class PhoneLib private constructor(
      * This needs to be called whenever this library needs to initialise. Without it, no other calls
      * can be done.
      */
-    fun initialise() = sipInitialiseRepository.initialise()
+    fun initialise(config: Config) = sipInitialiseRepository.initialise(config)
 
     /**
      * This registers your user on SIP. You need this before placing a call.
-     * @param username the SIP username
-     * @param password the SIP password
-     * @param domain the SIP server IP or host
-     * @param port the SIP server
-     * @param stunServer the stun server url, may be null
-     * @param encrypted whether you want to connect with TLS and SRTP
-     * @param registrationCallback the registration callback that will be called when registration succeeds or fails
      */
-    fun register(username: String, password: String, domain: String, port: String, stunServer: String?, encrypted: Boolean, registrationCallback: RegistrationCallback)
-            = sipRegisterRepository.registerUser(username, password, domain, port, stunServer, encrypted, registrationCallback)
+    fun register(callback: RegistrationCallback) = sipRegisterRepository.register(callback)
 
     fun destroy() {
         unregister()
@@ -66,31 +56,10 @@ class PhoneLib private constructor(
     fun unregister() = sipRegisterRepository.unregister()
 
     /**
-     * Set the audio codecs you want to support, if none set all are selected, options are visible in @see org.openvoipalliance.phonelib.model.Codec.
-     * @param codecs the codecs you want to support
-     */
-    fun setAudioCodecs(codecs: Set<Codec>) = sipInitialiseRepository.setAudioCodecs(codecs)
-
-    /**
-     * It is not necessary to set this, we use versionCode.toString() by default to set this. Only necessary when you want to set it yourself.
-     *
-     * @param userAgent the custom useragent string
-     */
-    fun setUserAgent(userAgent: String)
-            = sipInitialiseRepository.setUserAgent(userAgent)
-
-    /**
      * Set a callback to listen to call changes where needed.
      * @param sessionCallback the session callback
      */
     fun setSessionCallback(sessionCallback: SessionCallback?) = sipInitialiseRepository.setSessionCallback(sessionCallback)
-
-    /**
-     * Set a listener to receive log events from the library.
-     *
-     * @param LogListener the listener
-     */
-    fun setLogListener(listener: LogListener) = sipInitialiseRepository.setLogListener(listener)
 
     /**
      * This method audio calls a phone number
@@ -99,7 +68,7 @@ class PhoneLib private constructor(
      * phone service isn't ready.
      */
     @RequiresPermission(RECORD_AUDIO)
-    fun callTo(number: String): Session? = sipSessionRepository.callTo(number)
+    fun callTo(number: String): Call? = sipSessionRepository.callTo(number)
 
     /**
      * This method calls a phone number, optionally with video
@@ -109,7 +78,7 @@ class PhoneLib private constructor(
      * phone service isn't ready.
      */
     @RequiresPermission(allOf = [CAMERA, RECORD_AUDIO])
-    fun callTo(number: String, video: Boolean): Session? = sipSessionRepository.callTo(number, video)
+    fun callTo(number: String, video: Boolean): Call? = sipSessionRepository.callTo(number, video)
 
 
     /** --Control an incoming call-- */
@@ -117,18 +86,18 @@ class PhoneLib private constructor(
      * Accepts the current incoming session/call when it exists
      */
     @RequiresPermission(RECORD_AUDIO)
-    fun acceptIncoming(session: Session) = sipSessionRepository.acceptIncoming(session)
+    fun acceptIncoming(call: Call) = sipSessionRepository.acceptIncoming(call)
 
     /**
      * Declines the current incoming session/call when it exists
      */
     @RequiresPermission(RECORD_AUDIO)
-    fun declineIncoming(session: Session, reason: Reason) = sipSessionRepository.declineIncoming(session, reason)
+    fun declineIncoming(call: Call, reason: Reason) = sipSessionRepository.declineIncoming(call, reason)
 
     /**
      * Hangs up the current active session/call when it exists
      */
-    fun end(session: Session) = sipSessionRepository.end(session)
+    fun end(call: Call) = sipSessionRepository.end(call)
 
 
     /** --Controlling an active call-- */
@@ -143,7 +112,7 @@ class PhoneLib private constructor(
      * @param from The session you want to control.
      * @param to The number you want to call to.
      */
-    fun transferUnattended(from: Session, to: String) = sipCallControlsRepository.transferUnattended(from, to)
+    fun transferUnattended(from: Call, to: String) = sipCallControlsRepository.transferUnattended(from, to)
 
     /**
      * Begin an attended transfer, putting the current call on hold and placing a call to a new user.
@@ -152,12 +121,12 @@ class PhoneLib private constructor(
      * @param to The number you want to transfer to.
      */
     @RequiresPermission(allOf = [CAMERA, RECORD_AUDIO])
-    fun beginAttendedTransfer(from: Session, to: String): AttendedTransferSession {
-        pauseSession(from)
+    fun beginAttendedTransfer(from: Call, to: String): AttendedTransferSession {
+        pauseCall(from)
 
         val targetSession = callTo(to) ?: throw Exception("Unable to make call for target session")
 
-        resumeSession(targetSession)
+        resumeCall(targetSession)
 
         return AttendedTransferSession(from, targetSession)
     }
@@ -173,27 +142,27 @@ class PhoneLib private constructor(
      * Pause a session.
      * @param from The session you want to pause.
      */
-    fun pauseSession(session: Session) = sipCallControlsRepository.pauseSession(session)
+    fun pauseCall(call: Call) = sipCallControlsRepository.pauseCall(call)
 
     /**
      * Resume a session.
-     * @param session The session you want to resume.
+     * @param call The session you want to resume.
      */
-    fun resumeSession(session: Session) = sipCallControlsRepository.resumeSession(session)
+    fun resumeCall(call: Call) = sipCallControlsRepository.resumeCall(call)
 
     /**
      * Switch between sessions.
      * @param from The session you want to pause.
      * @param to The number you want to resume.
      */
-    fun switchSession(from: Session, to: Session) = sipCallControlsRepository.switchSession(from, to)
+    fun switchCall(from: Call, to: Call) = sipCallControlsRepository.switchCall(from, to)
 
     /**
      * Turns session on hold or off.
-     * @param session The session you want to control.
+     * @param call The session you want to control.
      * @param on If true, hold will turn on or stay on. If false it will turn off or stay off.
      */
-    fun setHold(session: Session, on: Boolean) = sipCallControlsRepository.setHold(session, on)
+    fun setHold(call: Call, on: Boolean) = sipCallControlsRepository.setHold(call, on)
 
 
     /** --Get call states-- */
@@ -206,8 +175,8 @@ class PhoneLib private constructor(
      * Send a dtmf string.
      *
      */
-    fun sendDtmf(session: Session, dtmf: String) =
-        sipCallControlsRepository.sendDtmf(session, dtmf)
+    fun sendDtmf(call: Call, dtmf: String) =
+        sipCallControlsRepository.sendDtmf(call, dtmf)
 
     /** --Video-- */
     /**

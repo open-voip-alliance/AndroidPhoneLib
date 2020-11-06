@@ -1,29 +1,24 @@
 package org.openvoipalliance.phonelib.repository
 
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.openvoipalliance.phonelib.R
 import org.openvoipalliance.phonelib.model.Codec
 import org.openvoipalliance.phonelib.model.PathConfigurations
 import org.openvoipalliance.phonelib.service.SimpleLinphoneCoreListener
 import org.linphone.core.*
 import org.linphone.core.LogLevel.*
-import org.openvoipalliance.phonelib.model.Session
+import org.openvoipalliance.phonelib.config.Config
+import org.openvoipalliance.phonelib.model.Call
+import org.linphone.core.Call as LinphoneCall
 import org.openvoipalliance.phonelib.repository.initialise.LogLevel
-import org.openvoipalliance.phonelib.repository.initialise.LogListener
 import org.openvoipalliance.phonelib.repository.initialise.SessionCallback
-import org.openvoipalliance.phonelib.repository.registration.RegistrationCallback
 import java.io.File
 import java.io.IOException
 import java.util.*
 
-private const val TAG = "LinphoneManager"
 private const val LINPHONE_DEBUG_TAG = "SIMPLE_LINPHONE"
 
 private const val BITRATE_LIMIT = 36
@@ -34,11 +29,11 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
     private var destroyed: Boolean = false
     private var pathConfigurations: PathConfigurations = PathConfigurations(mServiceContext.filesDir.absolutePath)
     private var timer: Timer? = null
-
+    lateinit var config: Config
+        internal set
     private var linphoneCore: Core? = null
 
     val initialised: Boolean get() = linphoneCore != null && !destroyed
-
 
     val safeLinphoneCore: Core?
         get() {
@@ -52,23 +47,18 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
 
     init {
         Factory.instance().setDebugMode(true, LINPHONE_DEBUG_TAG)
-
         pathConfigurations = PathConfigurations(mServiceContext.filesDir.absolutePath)
     }
 
-    fun initialiseLinphone(context: Context, audioCodecs: Set<Codec>, listener: LogListener?) {
+    fun initialiseLinphone(context: Context, config: Config) {
+        this.config = config
         Factory.instance().setDebugMode(true, LINPHONE_DEBUG_TAG)
-
-        listener?.let {
-            logListener = it
-            Factory.instance().loggingService.addListener(this)
-        }
-
-        startLibLinphone(context, audioCodecs)
+        config.logListener.let { Factory.instance().loggingService.addListener(this) }
+        startLibLinphone(context)
     }
 
     @Synchronized
-    private fun startLibLinphone(context: Context, audioCodecs: Set<Codec>) {
+    private fun startLibLinphone(context: Context) {
         try {
             copyAssetsFromPackage()
             linphoneCore = Factory.instance().createCoreWithConfig(
@@ -79,7 +69,7 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
                 enableDnsSearch(false)
                 start()
             }
-            initLibLinphone(audioCodecs)
+            initLibLinphone()
 
             val task: TimerTask = object : TimerTask() {
                 override fun run() {
@@ -108,12 +98,13 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
 
     @Synchronized
     @Throws(CoreException::class)
-    private fun initLibLinphone(audioCodecs: Set<Codec>) {
-        setUserAgent(null)
+    private fun initLibLinphone() {
+        val userConfig = this.config
 
         linphoneCore?.apply {
+            setUserAgent(userConfig.userAgent, null)
             remoteRingbackTone = pathConfigurations.ringSound
-            ring = null
+            ring = userConfig.ring
             playFile = pathConfigurations.pauseSound
             rootCa = pathConfigurations.linphoneRootCaFile
             remoteRingbackTone = pathConfigurations.ringSound
@@ -125,11 +116,11 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
             uploadBandwidth = UPLOAD_BANDWIDTH
         }
 
-        setCodecMime(audioCodecs)
+        setCodecMime(config.codecs.toSet())
         destroyed = false
     }
 
-    fun setCodecMime(audioCodecs: Set<Codec>) {
+    private fun setCodecMime(audioCodecs: Set<Codec>) {
         linphoneCore?.let {
             for (payloadType in it.audioPayloadTypes) {
                 payloadType.enable(audioCodecs.contains(Codec.valueOf(payloadType.mimeType.toUpperCase(Locale.ROOT))))
@@ -146,23 +137,6 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
         copyIfNotExist(mServiceContext, R.raw.linphonerc_factory, File(pathConfigurations.linphoneFactoryConfigFile).name)
         copyIfNotExist(mServiceContext, R.raw.lpconfig, pathConfigurations.linphoneConfigXsp)
         copyIfNotExist(mServiceContext, R.raw.rootca, pathConfigurations.linphoneRootCaFile)
-    }
-
-    @Suppress("DEPRECATION")
-    internal fun setUserAgent(userAgent: String?) {
-        try {
-            val versionName = userAgent
-                    ?: mServiceContext.packageManager.getPackageInfo(mServiceContext.packageName,
-                            0).versionName ?: if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        mServiceContext.packageManager.getPackageInfo(mServiceContext.packageName, 0).longVersionCode.toString()
-                    } else {
-                        mServiceContext.packageManager.getPackageInfo(mServiceContext.packageName, 0).versionCode.toString()
-                    }
-
-            linphoneCore?.setUserAgent(System.getProperty("http.agent"), versionName)
-        } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
-        }
     }
 
     @Throws(IOException::class)
@@ -188,52 +162,35 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
     }
 
     override fun onRegistrationStateChanged(lc: Core?, cfg: ProxyConfig?, cstate: RegistrationState?, message: String?) {
-        registrationCallback?.stateChanged(when (cstate) {
-            RegistrationState.None -> {
-                org.openvoipalliance.phonelib.model.RegistrationState.NONE
-            }
-            RegistrationState.Progress -> {
-                org.openvoipalliance.phonelib.model.RegistrationState.PROGRESS
-            }
-            RegistrationState.Ok -> {
-                org.openvoipalliance.phonelib.model.RegistrationState.REGISTERED
-            }
-            RegistrationState.Cleared -> {
-                org.openvoipalliance.phonelib.model.RegistrationState.CLEARED
-            }
-            RegistrationState.Failed -> {
-                org.openvoipalliance.phonelib.model.RegistrationState.FAILED
-            }
-            else -> {
-                org.openvoipalliance.phonelib.model.RegistrationState.UNKNOWN
-            }
-        })
+
     }
 
-
-    override fun onCallStateChanged(lc: Core?, linphoneCall: Call?, state: Call.State?, message: String?) {
+    override fun onCallStateChanged(lc: Core?, linphoneCall: LinphoneCall?, state: LinphoneCall.State, message: String?) {
         Log.e(TAG, "callState: $state, Message: $message")
+
+        val call = Call(linphoneCall ?: return)
+
         when {
-            state === Call.State.IncomingReceived -> {
-                phoneCallback?.incomingCall(Session(linphoneCall!!))
+            state === LinphoneCall.State.IncomingReceived -> {
+                phoneCallback?.incomingCall(call)
             }
-            state === Call.State.OutgoingInit -> {
-                phoneCallback?.outgoingInit(Session(linphoneCall!!))
+            state === LinphoneCall.State.OutgoingInit -> {
+                phoneCallback?.outgoingInit(call)
             }
-            state === Call.State.Connected -> {
-                phoneCallback?.sessionConnected(Session(linphoneCall!!))
+            state === LinphoneCall.State.Connected -> {
+                phoneCallback?.sessionConnected(call)
             }
-            state === Call.State.End -> {
-                phoneCallback?.sessionEnded(Session(linphoneCall!!))
+            state === LinphoneCall.State.End -> {
+                phoneCallback?.sessionEnded(call)
             }
-            state === Call.State.Released -> {
-                phoneCallback?.sessionReleased(Session(linphoneCall!!))
+            state === LinphoneCall.State.Released -> {
+                phoneCallback?.sessionReleased(call)
             }
-            state === Call.State.Error -> {
-                phoneCallback?.error(Session(linphoneCall!!))
+            state === LinphoneCall.State.Error -> {
+                phoneCallback?.error(call)
             }
             else -> {
-                phoneCallback?.sessionUpdated(Session(linphoneCall!!))
+                phoneCallback?.sessionUpdated(call)
             }
         }
     }
@@ -251,14 +208,11 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
     companion object {
         const val TAG = "VOIPLIB-LINPHONE"
         var phoneCallback: SessionCallback? = null
-        var registrationCallback: RegistrationCallback? = null
-        var logListener: LogListener? = null
-        var serverIP: String = ""
         var globalState: GlobalState = GlobalState.Off
     }
 
     override fun onLogMessageWritten(service: LoggingService, domain: String, lev: org.linphone.core.LogLevel, message: String) {
-        logListener?.onLogMessageWritten(when (lev) {
+        config.logListener?.onLogMessageWritten(when (lev) {
                 Debug -> LogLevel.DEBUG
                 Trace -> LogLevel.TRACE
                 Message -> LogLevel.MESSAGE

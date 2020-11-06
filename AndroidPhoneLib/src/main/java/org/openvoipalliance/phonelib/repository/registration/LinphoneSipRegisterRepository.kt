@@ -3,36 +3,71 @@ package org.openvoipalliance.phonelib.repository.registration
 import android.R.attr
 import org.linphone.core.*
 import org.openvoipalliance.phonelib.repository.LinphoneCoreInstanceManager
+import org.openvoipalliance.phonelib.service.SimpleLinphoneCoreListener
 
 internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipRegisterRepository {
 
-    @Throws(CoreException::class)
-    override fun registerUser(name: String, password: String, domain: String, port: String, stunServer: String?, encrypted: Boolean, registrationCallback: RegistrationCallback) {
-        LinphoneCoreInstanceManager.registrationCallback = registrationCallback
-        LinphoneCoreInstanceManager.serverIP = "$domain:$port"
+    private val config
+        get() = linphoneCoreInstanceManager.config
 
+    @Throws(CoreException::class)
+    override fun register(registrationCallback: RegistrationCallback) {
         val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return
 
+        core.addListener(object : SimpleLinphoneCoreListener {
+            override fun onCallStateChanged(lc: Core?, call: Call?, cstate: Call.State?, message: String?) {
+
+            }
+
+            override fun onRegistrationStateChanged(lc: Core?, cfg: ProxyConfig?, cstate: RegistrationState, message: String?) {
+                registrationCallback.invoke(when (cstate) {
+                    RegistrationState.None -> {
+                        org.openvoipalliance.phonelib.model.RegistrationState.NONE
+                    }
+                    RegistrationState.Progress -> {
+                        org.openvoipalliance.phonelib.model.RegistrationState.PROGRESS
+                    }
+                    RegistrationState.Ok -> {
+                        org.openvoipalliance.phonelib.model.RegistrationState.REGISTERED
+                    }
+                    RegistrationState.Cleared -> {
+                        org.openvoipalliance.phonelib.model.RegistrationState.CLEARED
+                    }
+                    RegistrationState.Failed -> {
+                        org.openvoipalliance.phonelib.model.RegistrationState.FAILED
+                    }
+                    else -> {
+                        org.openvoipalliance.phonelib.model.RegistrationState.UNKNOWN
+                    }
+                })
+
+                if (cstate == RegistrationState.Failed || cstate == RegistrationState.Ok) {
+                    core.removeListener(this)
+                }
+            }
+        })
+
         core.transports = core.transports.apply {
-            udpPort = if (encrypted) attr.port else RANDOM_PORT
-            tcpPort = if (encrypted) attr.port else RANDOM_PORT
+            udpPort = if (config.encryption) attr.port else RANDOM_PORT
+            tcpPort = if (config.encryption) attr.port else RANDOM_PORT
             tlsPort = RANDOM_PORT
         }
 
-        core.mediaEncryption = if (encrypted) MediaEncryption.SRTP else MediaEncryption.None
-        core.isMediaEncryptionMandatory = encrypted
+        core.mediaEncryption = if (config.encryption) MediaEncryption.SRTP else MediaEncryption.None
+        core.isMediaEncryptionMandatory = config.encryption
 
-        stunServer?.let {
+        config.stun?.let {
             core.stunServer = it
         }
 
-        val authInfo = Factory.instance().createAuthInfo(name, name, password,
-                null, null, "$domain:$port").apply {
+        val authInfo = Factory.instance().createAuthInfo(config.auth.name, config.auth.name, config.auth.password,
+                null, null, "${config.auth.domain}:${config.auth.port}").apply {
             algorithm = null
         }
 
+        core.addProxyConfig(createProxyConfig(core, config.auth.name, config.auth.domain, config.auth.port.toString()))
+
         core.apply {
-            addProxyConfig(createProxyConfig(core, name, domain, port))
             addAuthInfo(authInfo)
             defaultProxyConfig = core.proxyConfigList.first()
             useRfc2833ForDtmf = true

@@ -1,6 +1,6 @@
 package org.openvoipalliance.phonelib.repository.call.controls
 
-import org.openvoipalliance.phonelib.model.Session
+import org.openvoipalliance.phonelib.model.Call
 import org.openvoipalliance.phonelib.model.AttendedTransferSession
 import org.openvoipalliance.phonelib.repository.LinphoneCoreInstanceManager
 
@@ -10,11 +10,11 @@ class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceMa
         linphoneCoreInstanceManager.safeLinphoneCore?.enableMic(on)
     }
 
-    override fun setHold(session: Session, on: Boolean) {
+    override fun setHold(call: Call, on: Boolean) {
         if (on) {
-            session.linphoneCall.pause()
+            call.linphoneCall.pause()
         } else {
-            session.linphoneCall.resume()
+            call.linphoneCall.resume()
         }
     }
 
@@ -24,31 +24,31 @@ class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceMa
         return !core.micEnabled()
     }
 
-    override fun transferUnattended(session: Session, to: String) {
-        session.linphoneCall.transfer(to)
+    override fun transferUnattended(call: Call, to: String) {
+        call.linphoneCall.transfer(to)
     }
 
     override fun finishAttendedTransfer(attendedTransferSession: AttendedTransferSession) {
         attendedTransferSession.from.linphoneCall.transferToAnother(attendedTransferSession.to.linphoneCall)
     }
 
-    override fun pauseSession(session: Session) {
-        session.linphoneCall.pause()
+    override fun pauseCall(call: Call) {
+        call.linphoneCall.pause()
     }
 
-    override fun resumeSession(session: Session) {
-        session.linphoneCall.resume()
+    override fun resumeCall(call: Call) {
+        call.linphoneCall.resume()
     }
 
-    override fun sendDtmf(session: Session, dtmf: String) {
+    override fun sendDtmf(call: Call, dtmf: String) {
         if (dtmf.length == 1) {
-            session.linphoneCall.sendDtmf(dtmf[0])
+            call.linphoneCall.sendDtmf(dtmf[0])
         } else {
-            session.linphoneCall.sendDtmfs(dtmf)
+            call.linphoneCall.sendDtmfs(dtmf)
         }
     }
 
-    override fun switchSession(from: Session, to: Session) {
+    override fun switchCall(from: Call, to: Call) {
         from.linphoneCall.pause()
         to.linphoneCall.resume()
     }

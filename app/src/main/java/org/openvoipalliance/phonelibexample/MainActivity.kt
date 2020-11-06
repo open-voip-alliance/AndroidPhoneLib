@@ -13,7 +13,7 @@ import androidx.core.app.ActivityCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import org.openvoipalliance.phonelib.PhoneLib
 import org.openvoipalliance.phonelib.model.AttendedTransferSession
-import org.openvoipalliance.phonelib.model.Session
+import org.openvoipalliance.phonelib.model.Call
 import org.openvoipalliance.phonelib.repository.initialise.SessionCallback
 import java.util.concurrent.TimeUnit
 
@@ -23,8 +23,8 @@ private const val REQUEST_VIDEO_PERMISSION = 3
 class MainActivity : AppCompatActivity() {
 
     private lateinit var handler: Handler
-    private var activeSession: Session? = null
-    private var secondSession: Session? = null
+    private var activeCall: Call? = null
+    private var secondCall: Call? = null
     private var attendedTransferSession: AttendedTransferSession? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,21 +36,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun setSipCallbacks() {
         PhoneLib.getInstance(this).setSessionCallback(object : SessionCallback() {
-            override fun incomingCall(incomingSession: Session) {
-                super.incomingCall(incomingSession)
-                activeSession = incomingSession
+            override fun incomingCall(incomingCall: Call) {
+                super.incomingCall(incomingCall)
+                activeCall = incomingCall
                 accept_call.visibility = View.VISIBLE
                 hang_up.visibility = View.VISIBLE
                 transfer.visibility = View.VISIBLE
                 attended_transfer.visibility = View.VISIBLE
                 add_call.visibility = View.VISIBLE
                 switch_calls.visibility = View.VISIBLE
-                caller.text = incomingSession.displayName
+                caller.text = incomingCall.displayName
                 setDuration()
             }
 
-            override fun outgoingInit(session: Session) {
-                super.outgoingInit(session)
+            override fun outgoingInit(call: Call) {
+                super.outgoingInit(call)
                 hang_up.visibility = View.VISIBLE
                 transfer.visibility = View.VISIBLE
                 attended_transfer.visibility = View.VISIBLE
@@ -58,18 +58,18 @@ class MainActivity : AppCompatActivity() {
                 switch_calls.visibility = View.VISIBLE
             }
 
-            override fun sessionConnected(session: Session) {
-                super.sessionConnected(session)
+            override fun sessionConnected(call: Call) {
+                super.sessionConnected(call)
                 PhoneLib.getInstance(this@MainActivity).setMicrophone(true)
                 accept_call.visibility = View.GONE
                 call_buttons.visibility = View.VISIBLE
                 call_data.visibility = View.VISIBLE
-                caller.text = session.displayName
+                caller.text = call.displayName
                 setDuration()
             }
 
-            override fun sessionReleased(session: Session) {
-                super.sessionReleased(session)
+            override fun sessionReleased(call: Call) {
+                super.sessionReleased(call)
                 sendBroadcast(Intent(VideoActivity.RECEIVE_FINISH_VIDEO_ACTIVITY))
                 accept_call.visibility = View.GONE
                 hang_up.visibility = View.GONE
@@ -80,11 +80,11 @@ class MainActivity : AppCompatActivity() {
                 merge_calls.visibility = View.GONE
                 call_buttons.visibility = View.GONE
                 call_data.visibility = View.GONE
-                activeSession = null
+                activeCall = null
             }
 
-            override fun sessionEnded(session: Session) {
-                super.sessionEnded(session)
+            override fun sessionEnded(call: Call) {
+                super.sessionEnded(call)
                 sendBroadcast(Intent(VideoActivity.RECEIVE_FINISH_VIDEO_ACTIVITY))
                 accept_call.visibility = View.GONE
                 hang_up.visibility = View.GONE
@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity() {
                 merge_calls.visibility = View.GONE
                 call_buttons.visibility = View.GONE
                 call_data.visibility = View.GONE
-                activeSession = null
+                activeCall = null
             }
         })
     }
@@ -103,8 +103,8 @@ class MainActivity : AppCompatActivity() {
     private fun setDuration() {
         handler = Handler();
         handler.postDelayed({
-            duration.text = activeSession?.duration.toString()
-            if (activeSession != null) {
+            duration.text = activeCall?.duration.toString()
+            if (activeCall != null) {
                 setDuration()
             }
         }, TimeUnit.SECONDS.toMillis(1))
@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity() {
             val dialNum = dial_number.text.toString()
             if (hasAudioCallPermissions()) {
                 PhoneLib.getInstance(this@MainActivity).callTo(dialNum, false)?.let {
-                    activeSession = it
+                    activeCall = it
                 }
             } else {
                 Log.e(TAG, "No permission granted")
@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity() {
             val dialNum = dial_number.text.toString()
             if (hasVideoCallPermissions() && hasAudioCallPermissions()) {
                 PhoneLib.getInstance(this@MainActivity).callTo(dialNum, true)?.let {
-                    activeSession = it
+                    activeCall = it
                 }
                 startActivity(Intent(this@MainActivity, VideoActivity::class.java))
             } else {
@@ -137,36 +137,36 @@ class MainActivity : AppCompatActivity() {
             PhoneLib.getInstance(this@MainActivity).unregister()
         }
         hang_up.setOnClickListener {
-            activeSession?.let {
+            activeCall?.let {
                 PhoneLib.getInstance(this@MainActivity).end(it)
             }
         }
         transfer.setOnClickListener {
-            activeSession?.let {
+            activeCall?.let {
                 PhoneLib.getInstance(this@MainActivity).transferUnattended(it, dial_number.text.toString())
             }
         }
         add_call.setOnClickListener {
-            activeSession?.let {
-                secondSession = PhoneLib.getInstance(this@MainActivity).callTo(dial_number.text.toString())
-                secondSession?.let { newSession ->
+            activeCall?.let {
+                secondCall = PhoneLib.getInstance(this@MainActivity).callTo(dial_number.text.toString())
+                secondCall?.let { newSession ->
                     PhoneLib.getInstance(this@MainActivity).switchSession(it, newSession)
-                    activeSession = newSession
-                    secondSession = it
+                    activeCall = newSession
+                    secondCall = it
                 }
             }
         }
         switch_calls.setOnClickListener {
-            activeSession?.let {
-                secondSession?.let { newSession ->
+            activeCall?.let {
+                secondCall?.let { newSession ->
                     PhoneLib.getInstance(this@MainActivity).switchSession(it, newSession)
-                    activeSession = newSession
-                    secondSession = it
+                    activeCall = newSession
+                    secondCall = it
                 }
             }
         }
         attended_transfer.setOnClickListener {
-            activeSession?.let {
+            activeCall?.let {
                 attendedTransferSession = PhoneLib.getInstance(this@MainActivity).beginAttendedTransfer(it, dial_number.text.toString())
                 merge_calls.visibility = View.VISIBLE
             }
@@ -178,7 +178,7 @@ class MainActivity : AppCompatActivity() {
         }
         accept_call.setOnClickListener {
             if (hasAudioCallPermissions()) {
-                activeSession?.let {
+                activeCall?.let {
                     PhoneLib.getInstance(this@MainActivity).acceptIncoming(it)
                 }
                 if (PhoneLib.getInstance(this@MainActivity).isVideoEnabled()) {
@@ -192,7 +192,7 @@ class MainActivity : AppCompatActivity() {
             PhoneLib.getInstance(this@MainActivity).setMicrophone(!checked)
         }
         toggle_hold.setOnCheckedChangeListener{_, checked ->
-            activeSession?.let {
+            activeCall?.let {
                 PhoneLib.getInstance(this@MainActivity).setHold(it, checked)
             }
         }

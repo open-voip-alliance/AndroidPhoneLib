@@ -1,24 +1,24 @@
 package org.openvoipalliance.phonelib.repository.call.controls
 
-import org.openvoipalliance.phonelib.model.Session
+import org.openvoipalliance.phonelib.model.Call
 import org.openvoipalliance.phonelib.model.AttendedTransferSession
 
 interface SipActiveCallControlsRepository {
     fun setMicrophone(on: Boolean)
 
-    fun setHold(session: Session, on: Boolean)
+    fun setHold(call: Call, on: Boolean)
 
     fun isMicrophoneMuted(): Boolean
 
-    fun transferUnattended(session: Session, to: String)
+    fun transferUnattended(call: Call, to: String)
 
     fun finishAttendedTransfer(attendedTransferSession: AttendedTransferSession)
 
-    fun switchSession(from: Session, to: Session)
+    fun switchCall(from: Call, to: Call)
 
-    fun pauseSession(session: Session)
+    fun pauseCall(call: Call)
 
-    fun resumeSession(session: Session)
+    fun resumeCall(call: Call)
 
-    fun sendDtmf(session: Session, dtmf: String)
+    fun sendDtmf(call: Call, dtmf: String)
 }

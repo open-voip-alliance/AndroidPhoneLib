@@ -2,12 +2,12 @@ package org.openvoipalliance.phonelib.repository.call.session
 
 import android.util.Log
 import org.openvoipalliance.phonelib.model.Reason
-import org.openvoipalliance.phonelib.model.Session
 import org.openvoipalliance.phonelib.model.SoftPhone
 import org.openvoipalliance.phonelib.repository.LinphoneCoreInstanceManager
 import org.linphone.core.Address
-import org.linphone.core.Call
 import org.linphone.core.CoreException
+import org.openvoipalliance.phonelib.model.Call
+import org.linphone.core.Call as LinphoneCall
 
 private const val TAG = "LinphoneSipSession"
 
@@ -17,28 +17,28 @@ class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: Linp
         linphoneCoreInstanceManager.safeLinphoneCore?.enableEchoLimiter(true)
     }
 
-    override fun acceptIncoming(session: Session) {
+    override fun acceptIncoming(call: Call) {
         try {
-            linphoneCoreInstanceManager.safeLinphoneCore?.acceptCall(session.linphoneCall)
+            linphoneCoreInstanceManager.safeLinphoneCore?.acceptCall(call.linphoneCall)
         } catch (e: CoreException) {
             e.printStackTrace()
         }
     }
 
-    override fun declineIncoming(session: Session, reason: Reason) {
+    override fun declineIncoming(call: Call, reason: Reason) {
         try {
-            linphoneCoreInstanceManager.safeLinphoneCore?.declineCall(session.linphoneCall, org.linphone.core.Reason.fromInt(reason.value))
+            linphoneCoreInstanceManager.safeLinphoneCore?.declineCall(call.linphoneCall, org.linphone.core.Reason.fromInt(reason.value))
         } catch (e: CoreException) {
             e.printStackTrace()
         }
     }
 
 
-    override fun callTo(number: String) : Session? {
+    override fun callTo(number: String) : Call? {
         return callTo(number, false)
     }
 
-    override fun callTo(number: String, isVideoCall: Boolean) : Session? {
+    override fun callTo(number: String, isVideoCall: Boolean) : Call? {
         if (!linphoneCoreInstanceManager.initialised) {
             Log.e(TAG, "The LinphoneService isn't ready")
             return null
@@ -49,14 +49,14 @@ class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: Linp
         }
         val phone = SoftPhone()
         phone.userName = number
-        phone.host = LinphoneCoreInstanceManager.serverIP
-        callTo(phone, isVideoCall)?.let { return Session(it) }
+        phone.host = linphoneCoreInstanceManager.config.auth.domain
+        callTo(phone, isVideoCall)?.let { return Call(it) }
         return null
     }
 
-    private fun callTo(bean: SoftPhone, isVideoCall: Boolean) : Call? {
+    private fun callTo(bean: SoftPhone, isVideoCall: Boolean) : LinphoneCall? {
         val address: Address
-        var call: Call? = null
+        var call: LinphoneCall? = null
         address = try {
             linphoneCoreInstanceManager.safeLinphoneCore!!.interpretUrl(bean.userName + "@" + bean.host)!!
         } catch (e: CoreException) {
@@ -79,8 +79,8 @@ class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: Linp
         return call
     }
 
-    override fun end(session: Session) {
-        session.linphoneCall.terminate()
+    override fun end(call: Call) {
+        call.linphoneCall.terminate()
         if (linphoneCoreInstanceManager.safeLinphoneCore?.isInConference == true) {
             linphoneCoreInstanceManager.safeLinphoneCore?.terminateConference()
         }
