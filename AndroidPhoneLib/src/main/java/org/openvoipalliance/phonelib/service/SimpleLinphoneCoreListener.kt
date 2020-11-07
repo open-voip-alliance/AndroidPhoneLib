@@ -152,4 +152,12 @@ interface SimpleLinphoneCoreListener : CoreListener {
     override fun onVersionUpdateCheckResultReceived(lc: Core?, result: VersionUpdateCheckResult?, version: String?, url: String?) {
         
     }
+
+    override fun onRegistrationStateChanged(lc: Core?, cfg: ProxyConfig?, cstate: RegistrationState?, message: String?) {
+
+    }
+
+    override fun onCallStateChanged(lc: Core?, linphoneCall: Call?, state: Call.State, message: String?) {
+
+    }
 }

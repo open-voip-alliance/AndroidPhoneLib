@@ -1,7 +1,7 @@
 package org.openvoipalliance.phonelib.repository.call.controls
 
-import org.openvoipalliance.phonelib.model.Call
 import org.openvoipalliance.phonelib.model.AttendedTransferSession
+import org.openvoipalliance.phonelib.model.Call
 
 interface SipActiveCallControlsRepository {
     fun setMicrophone(on: Boolean)

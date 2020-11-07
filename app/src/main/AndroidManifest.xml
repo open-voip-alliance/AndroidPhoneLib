@@ -26,10 +26,6 @@
         </activity>
 
         <activity android:name="org.openvoipalliance.phonelibexample.MainActivity" android:theme="@style/AppTheme.NoActionBar" android:screenOrientation="portrait"/>
-
-        <activity android:name="org.openvoipalliance.phonelibexample.VideoActivity" android:theme="@style/AppTheme.NoActionBar" android:screenOrientation="portrait"/>
-
-        <receiver android:name="org.openvoipalliance.phonelibexample.VideoActivity$FinishVideoActivityReceiver" />
     </application>
 
 </manifest>

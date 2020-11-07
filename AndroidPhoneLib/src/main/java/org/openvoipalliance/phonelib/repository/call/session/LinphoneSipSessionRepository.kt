@@ -1,17 +1,16 @@
 package org.openvoipalliance.phonelib.repository.call.session
 
-import android.util.Log
-import org.openvoipalliance.phonelib.model.Reason
-import org.openvoipalliance.phonelib.model.SoftPhone
-import org.openvoipalliance.phonelib.repository.LinphoneCoreInstanceManager
 import org.linphone.core.Address
 import org.linphone.core.CoreException
 import org.openvoipalliance.phonelib.model.Call
+import org.openvoipalliance.phonelib.model.Reason
+import org.openvoipalliance.phonelib.model.SoftPhone
+import org.openvoipalliance.phonelib.repository.LinphoneCoreInstanceManager
 import org.linphone.core.Call as LinphoneCall
 
 private const val TAG = "LinphoneSipSession"
 
-class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipSessionRepository {
+internal class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipSessionRepository {
     init {
         linphoneCoreInstanceManager.safeLinphoneCore?.enableEchoCancellation(true)
         linphoneCoreInstanceManager.safeLinphoneCore?.enableEchoLimiter(true)
@@ -34,24 +33,22 @@ class LinphoneSipSessionRepository(private val linphoneCoreInstanceManager: Linp
     }
 
 
-    override fun callTo(number: String) : Call? {
+    override fun callTo(number: String): Call {
         return callTo(number, false)
     }
 
-    override fun callTo(number: String, isVideoCall: Boolean) : Call? {
+    private fun callTo(number: String, isVideoCall: Boolean): Call {
         if (!linphoneCoreInstanceManager.initialised) {
-            Log.e(TAG, "The LinphoneService isn't ready")
-            return null
+            throw Exception("Linphone is not ready")
         }
         if (number.isEmpty()) {
-            Log.e(TAG, "The entered phone number is empty")
-            return null
+            throw IllegalArgumentException("Phone number is not valid")
         }
         val phone = SoftPhone()
         phone.userName = number
         phone.host = linphoneCoreInstanceManager.config.auth.domain
-        callTo(phone, isVideoCall)?.let { return Call(it) }
-        return null
+
+        return Call(callTo(phone, isVideoCall) ?: throw Exception("Call failed"))
     }
 
     private fun callTo(bean: SoftPhone, isVideoCall: Boolean) : LinphoneCall? {

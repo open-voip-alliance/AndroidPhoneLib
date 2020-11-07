@@ -13,8 +13,11 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
     }
 
     override fun destroy() {
-        LinphoneCoreInstanceManager.phoneCallback = null
         linphoneCoreInstanceManager.destroy()
+    }
+
+    override fun swapConfig(config: PhoneLibConfig) {
+        linphoneCoreInstanceManager.config = config
     }
 
     override fun refreshRegisters(): Boolean {
@@ -25,7 +28,5 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
         return false
     }
 
-    override fun setSessionCallback(sessionCallback: SessionCallback?) {
-        LinphoneCoreInstanceManager.phoneCallback = sessionCallback
-    }
+    override fun currentConfig(): org.openvoipalliance.phonelib.config.Config = linphoneCoreInstanceManager.config
 }

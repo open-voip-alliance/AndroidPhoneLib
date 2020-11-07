@@ -4,20 +4,21 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import org.openvoipalliance.phonelib.R
-import org.openvoipalliance.phonelib.model.Codec
-import org.openvoipalliance.phonelib.model.PathConfigurations
-import org.openvoipalliance.phonelib.service.SimpleLinphoneCoreListener
 import org.linphone.core.*
+import org.linphone.core.GlobalState.Off
+import org.linphone.core.GlobalState.On
 import org.linphone.core.LogLevel.*
+import org.openvoipalliance.phonelib.R
 import org.openvoipalliance.phonelib.config.Config
 import org.openvoipalliance.phonelib.model.Call
-import org.linphone.core.Call as LinphoneCall
+import org.openvoipalliance.phonelib.model.Codec
+import org.openvoipalliance.phonelib.model.PathConfigurations
 import org.openvoipalliance.phonelib.repository.initialise.LogLevel
-import org.openvoipalliance.phonelib.repository.initialise.SessionCallback
+import org.openvoipalliance.phonelib.service.SimpleLinphoneCoreListener
 import java.io.File
 import java.io.IOException
 import java.util.*
+import org.linphone.core.Call as LinphoneCall
 
 private const val LINPHONE_DEBUG_TAG = "SIMPLE_LINPHONE"
 
@@ -25,7 +26,7 @@ private const val BITRATE_LIMIT = 36
 private const val DOWNLOAD_BANDWIDTH = 0
 private const val UPLOAD_BANDWIDTH = 0
 
-class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleLinphoneCoreListener, LoggingServiceListener {
+internal class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleLinphoneCoreListener, LoggingServiceListener {
     private var destroyed: Boolean = false
     private var pathConfigurations: PathConfigurations = PathConfigurations(mServiceContext.filesDir.absolutePath)
     private var timer: Timer? = null
@@ -161,43 +162,42 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
         inputStream.close()
     }
 
-    override fun onRegistrationStateChanged(lc: Core?, cfg: ProxyConfig?, cstate: RegistrationState?, message: String?) {
-
-    }
-
     override fun onCallStateChanged(lc: Core?, linphoneCall: LinphoneCall?, state: LinphoneCall.State, message: String?) {
         Log.e(TAG, "callState: $state, Message: $message")
 
         val call = Call(linphoneCall ?: return)
 
-        when {
-            state === LinphoneCall.State.IncomingReceived -> {
-                phoneCallback?.incomingCall(call)
-            }
-            state === LinphoneCall.State.OutgoingInit -> {
-                phoneCallback?.outgoingInit(call)
-            }
-            state === LinphoneCall.State.Connected -> {
-                phoneCallback?.sessionConnected(call)
-            }
-            state === LinphoneCall.State.End -> {
-                phoneCallback?.sessionEnded(call)
-            }
-            state === LinphoneCall.State.Released -> {
-                phoneCallback?.sessionReleased(call)
-            }
-            state === LinphoneCall.State.Error -> {
-                phoneCallback?.error(call)
-            }
-            else -> {
-                phoneCallback?.sessionUpdated(call)
-            }
+        when (state) {
+            LinphoneCall.State.IncomingReceived -> config.callListener.incomingCallReceived(call)
+            LinphoneCall.State.OutgoingInit -> config.callListener.outgoingCallCreated(call)
+            LinphoneCall.State.Connected -> config.callListener.callConnected(call)
+            LinphoneCall.State.End -> config.callListener.callEnded(call)
+            LinphoneCall.State.Error -> config.callListener.error(call)
+            else -> config.callListener.callUpdated(call)
         }
     }
 
     override fun onGlobalStateChanged(lc: Core?, gstate: GlobalState?, message: String?) {
-        super.onGlobalStateChanged(lc, gstate, message)
-        gstate?.let { globalState = it }
+        gstate?.let {
+            globalState = it
+
+            when (it) {
+                Off -> config.onDestroy()
+                On -> config.onReady()
+                else -> {}
+            }
+        }
+    }
+
+    override fun onLogMessageWritten(service: LoggingService, domain: String, lev: org.linphone.core.LogLevel, message: String) {
+        config.logListener?.onLogMessageWritten(when (lev) {
+            Debug -> LogLevel.DEBUG
+            Trace -> LogLevel.TRACE
+            Message -> LogLevel.MESSAGE
+            Warning -> LogLevel.WARNING
+            Error -> LogLevel.ERROR
+            Fatal -> LogLevel.FATAL
+        }, message)
     }
 
     @Synchronized
@@ -207,18 +207,6 @@ class LinphoneCoreInstanceManager(private val mServiceContext: Context): SimpleL
 
     companion object {
         const val TAG = "VOIPLIB-LINPHONE"
-        var phoneCallback: SessionCallback? = null
-        var globalState: GlobalState = GlobalState.Off
-    }
-
-    override fun onLogMessageWritten(service: LoggingService, domain: String, lev: org.linphone.core.LogLevel, message: String) {
-        config.logListener?.onLogMessageWritten(when (lev) {
-                Debug -> LogLevel.DEBUG
-                Trace -> LogLevel.TRACE
-                Message -> LogLevel.MESSAGE
-                Warning -> LogLevel.WARNING
-                Error -> LogLevel.ERROR
-                Fatal -> LogLevel.FATAL
-            }, message)
+        var globalState: GlobalState = Off
     }
 }

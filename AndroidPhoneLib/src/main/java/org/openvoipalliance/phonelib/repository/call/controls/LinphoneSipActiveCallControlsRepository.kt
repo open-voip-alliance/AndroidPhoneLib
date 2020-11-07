@@ -1,10 +1,10 @@
 package org.openvoipalliance.phonelib.repository.call.controls
 
-import org.openvoipalliance.phonelib.model.Call
 import org.openvoipalliance.phonelib.model.AttendedTransferSession
+import org.openvoipalliance.phonelib.model.Call
 import org.openvoipalliance.phonelib.repository.LinphoneCoreInstanceManager
 
-class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipActiveCallControlsRepository {
+internal class LinphoneSipActiveCallControlsRepository(private val linphoneCoreInstanceManager: LinphoneCoreInstanceManager) : SipActiveCallControlsRepository {
 
     override fun setMicrophone(on: Boolean) {
         linphoneCoreInstanceManager.safeLinphoneCore?.enableMic(on)

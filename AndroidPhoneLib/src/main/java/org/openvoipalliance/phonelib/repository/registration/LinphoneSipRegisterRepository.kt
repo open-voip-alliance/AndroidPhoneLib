@@ -15,11 +15,7 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
         val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return
 
         core.addListener(object : SimpleLinphoneCoreListener {
-            override fun onCallStateChanged(lc: Core?, call: Call?, cstate: Call.State?, message: String?) {
-
-            }
-
-            override fun onRegistrationStateChanged(lc: Core?, cfg: ProxyConfig?, cstate: RegistrationState, message: String?) {
+            override fun onRegistrationStateChanged(lc: Core?, cfg: ProxyConfig?, cstate: RegistrationState?, message: String?) {
                 registrationCallback.invoke(when (cstate) {
                     RegistrationState.None -> {
                         org.openvoipalliance.phonelib.model.RegistrationState.NONE

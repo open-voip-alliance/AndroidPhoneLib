@@ -1,228 +1,103 @@
-# AndroidPhoneLib
 
-This is a library intended for use by Spindle which is responsible for VoIP SIP communication.
+# AndroidPhoneLib  
+  
+This is library is an opinionated VoIP wrapper for Android applications. It currently uses Linphone as the underlying SIP library. 
+  
+## Installation  
+  
+    implementation 'org.openvoipalliance:AndroidPhoneLib:1.x.x'
 
-It is designed to make it easier to implement SIP functions into an app.
-Currently it uses Linphone as the underlying SIP SDK. But it's built in a way that the SIP SDK can easily be swapped by another one.
-
-## Installation
-
-### Under construction
-
-
-## Permissions
-
-Currently the permissions required are:
-
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-
-Runtime you'll have to require the Microphone and Camera permission (Camera only for video calls).
-
-## Registration
-
-Step 1: Import
-```
-import the AndroidPhoneLib .aar
-```
-
-Step 2: Initalise `AndroidPhoneLib`.
+## Registration  
+  
+Step 1: Create a Config object . This object contains all the possible configuration options, however the auth and callListener (more information later) parameters are the only one that are required, the rest will use sensible defaults.
 
 ```
-PhoneLib.getInstance(CONTEXT).initialise(this)
+val config = Config(
+	auth = Auth("username", "password", "domain", "port"),
+	callListener = callListener
+)
 ```
 
-Step 3: Use `register` to register the softphone. 
+Step 2: Get an instance of the PhoneLib and initialise it with the config
 
 ```
-            PhoneLib.getInstance(this).register(account, password, serverIP, port, stunServer, object : RegistrationCallback() {
-                override fun stateChanged(registrationState: RegistrationState) {
-                    super.stateChanged(registrationState)
-                    if (registrationState == RegistrationState.REGISTERED) {
-                        Log.d(TAG, "registered: ")
-                    } else {
-                        Log.e(TAG, "registrationFailed")
-                    }
-                }
-            })
+val phoneLib = PhoneLib.getInstance(CONTEXT).initialise(config)
 ```
 
-If register succeeds the callback `stateChanged(RegistrationState.REGISTERED)` will be called.
+Step 3: Call `register` to register with the authentication information provided in the config
+
+```
+            phoneLib.register {  registrationState ->
+                   if (registrationState == RegistrationState.REGISTERED) {
+	                   // registration was successful
+                   }
+            }
+```
 
 To `unregister` use:
 
 ```
-            PhoneLib.getInstance(this).unregister()
+            phoneLib.unregister()
 ```
 
-This will call `stateChanged(RegistrationState.CLEARED)` of the callback
+## Calling
 
-## Set supported codecs.
+To receive events you must provide a callListener that implements the CallListener interface, this provides a handful of simple methods that will allow your application to update based on the current state of the call. There is further documentation within the CallListener class as to what each callback method does.
 
-### Set codecs
-To set codecs you should use `setAudioCodecs(context: Context, codecs: Set<Codec>)`. Supported codecs are:
-- GSM
-- G722
-- G729
-- ILBC
-- ISAC
-- L16
-- OPUS
-- PCMU
-- PCMA
-- SPEEX
-By default ALL codecs are turned on. This must happen before registering and won't work when already SIP-registered.
+The CallListener listens for the following events:
 
-### Reset codecs
-To turn off your codec preferences `resetAudioCodecs()` can be used. After using this, all codecs are turned on again.
+ - incomingCallReceived
+ - outgoingCallCreated
+ - callConnected
+ - callEnded
+ - callUpdated
+ - error
 
-
-## Call functions
-
-All phone/call Callbacks are sent to the SessionCallback, you can easily register on it like this:
-
-        PhoneLib.getInstance(this).setSessionCallback(object : SessionCallback() {
-        abstract class SessionCallback {
-            override fun incomingCall(incomingSession: Session) {
-                super.incomingCall(incomingSession)
-            }
-
-            override fun outgoingInit(session: Session) {
-                super.outgoingInit(session)
-            }
-
-            override fun sessionConnected(session: Session) {
-                super.sessionConnected(session)
-            }
-
-            override fun sessionReleased(session: Session) {
-                super.sessionReleased(session)
-            }
-
-            override fun sessionEnded(session: Session) {
-                super.sessionEnded(session)
-            }
-
-            override fun sessionUpdated(session: Session) {
-                super.sessionUpdated(session)
-            }
-
-            override fun error(session: Session) {
-                super.error(session)
-            }
-        })
-
-The session object as shown in `incomingSession` is needed to answer an incoming call.
+All of these methods will provide a Call object, listening to these methods is the only way to obtain a call object so actions can be performed on it.
 
 ### Outgoing call
-Once registered you can make a call by calling `PhoneLib.getInstance(CONTEXT).callTo(NUMBER, IS_VIDEO)`. It will return a generic `Session` object which we'll need later.
+
+Once registered you can make a call as follows:
 
 ```
-val session = PhoneLib.getInstance(this@Activity).callTo('0612345678', false)
+phoneLib.callTo('0612345678')
 ```
 
-## Control an incoming call
+If setup successfully this will be followed shortly by a call to the outgoingCallCreated method which will provide a Call object.
 
 ### Incoming call
-Incoming call are received via `incomingCall(session: Session?)` in the `PhoneCallback`.
 
-### Decline call
-Declining a call is done via `PhoneLib.getInstance(this@Activity).declineIncoming(session)` (here you use the session object from earlier).
+When successfully registered, the library will be listening for incoming calls. If one is received the incomingCallReceived callback method will be triggered.
 
-### Accept call
-Accepting a call is done via `PhoneLib.getInstance(this@Activity).acceptIncoming(session)` (here you use the session object from earlier).
+Answering or declining an incoming call are considered actions, you can perform an action on a call as follows:
 
-### End call
-Ending a call is done via `PhoneLib.getInstance(this@Activity).end(session)`.
+    phoneLib.actions(call).accept()
 
+or
 
-## Controlling an active call
+    phoneLib.actions(call).decline()
 
-### Mute the microphone
-Muting the microphone is done via `PhoneLib.getInstance(this@Activity).setMuteMicrophone(true)`.
+There are many more actions available for calls, please look inspect the Actions class to see what more can be done to active calls.
 
-### Set call on hold
-Setting call on or off hold is done with `PhoneLib.getInstance(this@Activity).setHold(session, true)`.
+ ## Notes
 
-### Set call on hold
-Setting call on or off hold is done with `PhoneLib.getInstance(this@Activity).setHold(session, true)`.
+### Service
 
-### Transfer a session to a number unattended.
-Transfer a session unattended to a number with `PhoneLib.getInstance(this@Activity).transferUnattended(session, "0612345678")`.
+This library does not include an Android Service, if you wish for calls to continue when your application does not have an Activity in the foreground, you will need to implement a [Foreground Service](https://developer.android.com/guide/components/foreground-services).
 
+### Background Incoming Calls
 
-## Get call states
+Incoming calls on mobile devices typically use push notifications to trigger a registration, this is the our recommendation but implementing it is out of scope for this library.
 
-### Checking if microphone is muted
-Checking if microphone is on can be done via `PhoneLib.getInstance(this@Activity).isMicrophoneMuted()`.
+### Recommended Usage
 
-### Check if call is on hold
-The call is on hold when the CallState is `Paused` (or to be exact: `CallState.Paused`). If the other party has set the call to paused the call state is `PausedByRemote`.
+Although other use-cases are supported, we suggest performing a full initialisation before each call, and completely destroying the library after the call has completed.
 
+ ## Pull Requests
 
-### Getting session/call information
-The `Session` object contains all information about the session. 
-`getState: CallState` returns the call state.
-`getDisplayName: String` returns the display name of the caller.
-`getPhoneNumber: String` returns the phone number of the caller.
-`getDuration: Int` returns the duration in seconds of the caller.
-`getReason: org.openvoipalliance.phonelib.model.Reason` returns the reason of the session state.
+This library is designed to simplify using VoIP in an Android application and as such must be somewhat opinionated. This means the library will not support every possible situation.
 
-
-#### State can be:
-    Idle,
-    IncomingReceived,
-    OutgoingInit,
-    OutgoingProgress,
-    OutgoingRinging,
-    OutgoingEarlyMedia,
-    Connected,
-    StreamsRunning,
-    Pausing,
-    Paused,
-    Resuming,
-    Referred,
-    Error,
-    CallEnd,
-    PausedByRemote,
-    CallUpdatedByRemote,
-    CallIncomingEarlyMedia,
-    CallUpdating,
-    CallReleased,
-    CallEarlyUpdatedByRemote,
-    CallEarlyUpdating,
-    Unknown
-
-#### Reason can be:
-    NONE(0),
-    NO_RESPONSE(1),
-    BAD_CREDENTIALS(2),
-    DECLINED(3),
-    NOT_FOUND(4),
-    NOT_ANSWERED(5),
-    BUSY(6),
-    MEDIA(7),
-    IO_ERROR(8),
-    DO_NOT_DISTURB(9),
-    UNAUTHORISED(10),
-    NOT_ACCEPTABLE(11),
-    NO_MATCH(12),
-    MOVED_PERMANENTLY(13),
-    GONE(14),
-    TEMPORARILY_UNAVAILABLE(15),
-    ADDRESS_INCOMPLETE(16),
-    NOT_IMPLEMENTED(17),
-    BAD_GATEWAY(18),
-    SERVER_TIMEOUT(19),
-    UNKNOWN(20)
-
-
-### Video Call
-UNDER CONSTRUCTION
+Any pull requests should keep this in-mind as they will not be approved if they add a significant amount of complexity.
 
 ## Other
-If you have any question please let us know via `info@coffeeit.nl`. Or by contacting the project manager.
+If you have any question please let us know via `opensource@wearespindle.com` or by opening an issue.

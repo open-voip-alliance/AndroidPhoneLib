@@ -1,8 +1,9 @@
 package org.openvoipalliance.phonelib.model
 
-import org.linphone.core.Call as LinphoneCall
-import org.linphone.core.Call.Dir.*
+import org.linphone.core.Call.Dir.Incoming
+import org.linphone.core.Call.Dir.Outgoing
 import org.linphone.core.Reason
+import org.linphone.core.Call as LinphoneCall
 
 class Call(val linphoneCall: LinphoneCall) {
 

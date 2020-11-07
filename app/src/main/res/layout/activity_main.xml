@@ -45,16 +45,6 @@
             android:textColor="@color/colorAccent" />
 
         <Button
-            android:id="@+id/video_call"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginStart="16dp"
-            android:background="@drawable/rounded_button_ripple"
-            android:text="@string/video_call"
-            android:textColor="@color/colorAccent" />
-
-        <Button
             android:id="@+id/unregister"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
