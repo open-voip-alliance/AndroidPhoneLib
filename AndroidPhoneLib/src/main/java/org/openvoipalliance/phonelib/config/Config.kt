@@ -8,7 +8,7 @@ typealias GlobalStateCallback = () -> Unit
 
 data class Config(
         val auth: Auth,
-        val callListener: CallListener,
+        val callListener: CallListener = object : CallListener {},
         val encryption: Boolean = true,
         val stun: String? = null,
         val ring: String? = null,

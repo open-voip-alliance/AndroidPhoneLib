@@ -9,7 +9,7 @@ This is library is an opinionated VoIP wrapper for Android applications. It curr
 
 ## Registration  
   
-Step 1: Create a Config object . This object contains all the possible configuration options, however the auth and callListener (more information later) parameters are the only one that are required, the rest will use sensible defaults.
+Step 1: Create a Config object . This object contains all the possible configuration options, however the auth parameter is the only one that is required, the rest will use sensible defaults.
 
 ```
 val config = Config(
@@ -43,6 +43,8 @@ To `unregister` use:
 ## Calling
 
 To receive events you must provide a callListener that implements the CallListener interface, this provides a handful of simple methods that will allow your application to update based on the current state of the call. There is further documentation within the CallListener class as to what each callback method does.
+
+Once created this object should be provided in the config provided.
 
 The CallListener listens for the following events:
 
