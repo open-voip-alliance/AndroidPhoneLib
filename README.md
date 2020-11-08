@@ -1,20 +1,21 @@
 
-# AndroidPhoneLib  
-  
-This is library is an opinionated VoIP wrapper for Android applications. It currently uses Linphone as the underlying SIP library. 
-  
-## Installation  
-  
+
+# AndroidPhoneLib
+
+This is library is an opinionated VoIP wrapper for Android applications. It currently uses Linphone as the underlying SIP library.
+
+## Installation
+
     implementation 'org.openvoipalliance:AndroidPhoneLib:1.x.x'
 
-## Registration  
-  
+## Registration
+
 Step 1: Create a Config object . This object contains all the possible configuration options, however the auth parameter is the only one that is required, the rest will use sensible defaults.
 
 ```
 val config = Config(
-	auth = Auth("username", "password", "domain", "port"),
-	callListener = callListener
+   auth = Auth("username", "password", "domain", "port"),
+   callListener = callListener
 )
 ```
 
@@ -27,17 +28,17 @@ val phoneLib = PhoneLib.getInstance(CONTEXT).initialise(config)
 Step 3: Call `register` to register with the authentication information provided in the config
 
 ```
-            phoneLib.register {  registrationState ->
-                   if (registrationState == RegistrationState.REGISTERED) {
-	                   // registration was successful
-                   }
-            }
+phoneLib.register {  registrationState ->
+       if (registrationState == RegistrationState.REGISTERED) {
+           // registration was successful
+       }
+}
 ```
 
 To `unregister` use:
 
 ```
-            phoneLib.unregister()
+phoneLib.unregister()
 ```
 
 ## Calling
@@ -80,6 +81,27 @@ or
     phoneLib.actions(call).decline()
 
 There are many more actions available for calls, please look inspect the Actions class to see what more can be done to active calls.
+
+ ## Basic Example
+
+The library contains an example app that shows more clearly how to use the library but the following is a very basic example for making an outgoing call.
+
+
+
+    val config = Config(
+      auth = Auth("my username", "my password", "sip.com", 5061),
+      encryption = true,
+      stun = "mystunserver.com",
+      codecs = arrayOf(Codec.OPUS)
+    )
+
+    val phoneLib = PhoneLib.getInstance(context).initialise(config)
+
+    phoneLib.register {
+	    if (it == RegistrationState.REGISTERED) {
+		   phoneLib.callTo("0123456789")
+	    }
+    }
 
  ## Notes
 

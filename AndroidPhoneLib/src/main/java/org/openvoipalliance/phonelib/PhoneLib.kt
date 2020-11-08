@@ -27,13 +27,19 @@ class PhoneLib private constructor(private val context: Context) {
      * This needs to be called whenever this library needs to initialise. Without it, no other calls
      * can be done.
      */
-    fun initialise(config: Config) = sipInitialiseRepository.initialise(config)
+    fun initialise(config: Config): PhoneLib {
+        sipInitialiseRepository.initialise(config)
+        return this
+    }
 
     /**
      * This registers your user on SIP. You need this before placing a call.
      *
      */
-    fun register(callback: RegistrationCallback) = sipRegisterRepository.register(callback)
+    fun register(callback: RegistrationCallback): PhoneLib {
+        sipRegisterRepository.register(callback)
+        return this
+    }
 
     /**
      * Refreshes the configuration by destroying and then re-initialising the library.
