@@ -1,9 +1,15 @@
+import java.util.*
+
 plugins {
     id("com.android.library")
     kotlin("android")
     kotlin("android.extensions")
     id("com.kezong.fat-aar")
+    id("maven-publish")
+    id("com.jfrog.bintray")
 }
+
+val libraryVersion = "0.6.2"
 
 android {
     compileSdkVersion(30)
@@ -26,28 +32,50 @@ dependencies {
     embed("org.linphone:linphone-sdk-android:4.4+")
 }
 
-//tasks.withType(Javadoc).all {
-//    enabled = false
-//}
+publishing {
+    publications {
+        create<MavenPublication>("Production") {
+            artifact("$buildDir/outputs/aar/AndroidPhoneLib-release.aar")
+            groupId = "org.openvoipalliance"
+            artifactId = "AndroidPhoneLib"
+            version = libraryVersion
 
+            pom.withXml {
+                val dependenciesNode = asNode().appendNode("dependencies")
 
-//ext {
-//    bintrayRepo = 'AndroidPhoneLib'
-//    bintrayName = 'AndroidPhoneLib'
-//    publishedGroupId = 'org.openvoipalliance'
-//    libraryName = 'AndroidPhoneLib'
-//    artifact = 'AndroidPhoneLib'
-//    libraryDescription = 'An Android library to faciliate SIP communication.'
-//    siteUrl = 'https://github.com/open-voip-alliance/AndroidPhoneLib'
-//    gitUrl = 'https://github.com/open-voip-alliance/AndroidPhoneLib.git'
-//    libraryVersion = '0.5.28'
-//    developerId = 'jeremy.norman'
-//    developerName = 'Jeremy Norman'
-//    developerEmail = 'jeremy.norman@wearespindle.com'
-//    licenseName = 'The Apache Software License, Version 2.0'
-//    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-//    allLicenses = ['Apache-2.0']
-//}
-//
-//apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
-//apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
+                configurations.implementation.allDependencies.forEach {
+                    if (it.name != "unspecified") {
+                        val dependencyNode = dependenciesNode.appendNode("dependency")
+                        dependencyNode.appendNode("groupId", it.group)
+                        dependencyNode.appendNode("artifactId", it.name)
+                        dependencyNode.appendNode("version", it.version)
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun findProperty(s: String) = project.findProperty(s) as String?
+
+bintray {
+    user = findProperty("bintray.user")
+    key = findProperty("bintray.token")
+    setPublications("Production")
+    pkg(delegateClosureOf<com.jfrog.bintray.gradle.BintrayExtension.PackageConfig> {
+        repo = "AndroidPhoneLib"
+        name = "AndroidPhoneLib"
+        websiteUrl = "https://github.com/open-voip-alliance/AndroidPhoneLib"
+        githubRepo = "open-voip-alliance/AndroidPhoneLib"
+        vcsUrl = "https://github.com/open-voip-alliance/AndroidPhoneLib"
+        description = "An Android library to facilitate SIP communication."
+        setLabels("kotlin")
+        setLicenses("Apache-2.0")
+        publish = true
+        desc = description
+        version(delegateClosureOf<com.jfrog.bintray.gradle.BintrayExtension.VersionConfig> {
+            name = libraryVersion
+            released = Date().toString()
+        })
+    })
+}
