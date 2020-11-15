@@ -3,6 +3,7 @@ package org.openvoipalliance.phonelib
 import android.Manifest
 import android.content.Context
 import androidx.annotation.RequiresPermission
+import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.openvoipalliance.phonelib.di.Injection
 import org.openvoipalliance.phonelib.model.AttendedTransferSession
@@ -11,12 +12,10 @@ import org.openvoipalliance.phonelib.model.Reason
 import org.openvoipalliance.phonelib.repository.call.controls.SipActiveCallControlsRepository
 import org.openvoipalliance.phonelib.repository.call.session.SipSessionRepository
 
-class Actions(context: Context, private val call: Call) {
+class Actions(context: Context, private val call: Call) : KoinComponent {
 
-    private val injection = Injection(context)
-
-    private val sipCallControlsRepository: SipActiveCallControlsRepository by injection.inject()
-    private val sipSessionRepository: SipSessionRepository by injection.inject()
+    private val sipCallControlsRepository: SipActiveCallControlsRepository by inject()
+    private val sipSessionRepository: SipSessionRepository by inject()
 
     /** --Control an incoming call-- */
     /**

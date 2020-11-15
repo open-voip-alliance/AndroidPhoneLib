@@ -3,6 +3,8 @@ package org.openvoipalliance.phonelib
 import android.Manifest.permission.RECORD_AUDIO
 import android.content.Context
 import androidx.annotation.RequiresPermission
+import org.koin.core.component.KoinApiExtension
+import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.openvoipalliance.phonelib.config.Config
 import org.openvoipalliance.phonelib.di.Injection
@@ -14,8 +16,6 @@ import org.openvoipalliance.phonelib.repository.registration.RegistrationCallbac
 import org.openvoipalliance.phonelib.repository.registration.SipRegisterRepository
 
 class PhoneLib private constructor(private val context: Context) {
-    private val injection = Injection(context)
-
     private val sipInitialiseRepository: SipInitialiseRepository by injection.inject()
     private val sipRegisterRepository: SipRegisterRepository by injection.inject()
 
@@ -104,11 +104,16 @@ class PhoneLib private constructor(private val context: Context) {
 
     companion object {
         private var instance: PhoneLib? = null
+        internal lateinit var injection: Injection
 
         @JvmStatic
         fun getInstance(context: Context): PhoneLib {
-            return instance ?: PhoneLib(context.applicationContext)
-                    .also { instance = it }
+            if (instance != null) return instance as PhoneLib
+
+            injection = Injection(context)
+            val phoneLib = PhoneLib(context.applicationContext)
+            instance = phoneLib
+            return phoneLib
         }
     }
 }
