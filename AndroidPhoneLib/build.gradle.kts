@@ -9,12 +9,12 @@ plugins {
     id("com.jfrog.bintray")
 }
 
-val libraryVersion = "0.6.2"
+val libraryVersion = "0.6.17"
 
 android {
     compileSdkVersion(30)
     defaultConfig {
-        minSdkVersion(21)
+        minSdkVersion(23)
         targetSdkVersion(30)
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,7 +29,7 @@ dependencies {
     testImplementation("junit:junit:4.12")
 
     api("org.koin:koin-android:2.2.0-rc-4")
-    embed("org.linphone:linphone-sdk-android:4.4+")
+    embed("org.linphone:linphone-sdk-android:4.5.0-alpha.222+0ef3afd")
 }
 
 publishing {

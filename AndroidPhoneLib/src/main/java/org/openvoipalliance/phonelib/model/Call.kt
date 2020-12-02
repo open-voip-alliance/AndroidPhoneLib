@@ -47,10 +47,17 @@ class Call(val linphoneCall: LinphoneCall) {
                 else -> org.openvoipalliance.phonelib.model.Reason.UNKNOWN
             }
 
-    val callId = linphoneCall.callLog.callId
+    val callId: String?
+        get() = linphoneCall.callLog.callId
 
     val direction = when (linphoneCall.callLog.dir) {
         Outgoing -> Direction.OUTGOING
         Incoming -> Direction.INCOMING
     }
+
+    val isOnHold: Boolean
+        get() = when (state) {
+            CallState.Paused -> true
+            else -> false
+        }
 }

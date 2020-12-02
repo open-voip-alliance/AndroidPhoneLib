@@ -15,7 +15,7 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
         val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return
 
         core.addListener(object : SimpleLinphoneCoreListener {
-            override fun onRegistrationStateChanged(lc: Core?, cfg: ProxyConfig?, cstate: RegistrationState?, message: String?) {
+            override fun onRegistrationStateChanged(lc: Core, cfg: ProxyConfig, cstate: RegistrationState, message: String) {
                 registrationCallback.invoke(when (cstate) {
                     RegistrationState.None -> {
                         org.openvoipalliance.phonelib.model.RegistrationState.NONE
@@ -24,12 +24,14 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
                         org.openvoipalliance.phonelib.model.RegistrationState.PROGRESS
                     }
                     RegistrationState.Ok -> {
+                        linphoneCoreInstanceManager.isRegistered = true
                         org.openvoipalliance.phonelib.model.RegistrationState.REGISTERED
                     }
                     RegistrationState.Cleared -> {
                         org.openvoipalliance.phonelib.model.RegistrationState.CLEARED
                     }
                     RegistrationState.Failed -> {
+                        linphoneCoreInstanceManager.isRegistered = false
                         org.openvoipalliance.phonelib.model.RegistrationState.FAILED
                     }
                     else -> {
@@ -68,6 +70,7 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
             defaultProxyConfig = core.proxyConfigList.first()
             useRfc2833ForDtmf = true
             enableIpv6(false)
+            isPushNotificationEnabled = false
         }
     }
 
@@ -103,6 +106,8 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
             core.removeAuthInfo(it)
         }
     }
+
+    override fun isRegistered() = linphoneCoreInstanceManager.isRegistered
 
     companion object {
         const val RANDOM_PORT = -1

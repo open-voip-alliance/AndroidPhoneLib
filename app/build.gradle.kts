@@ -11,7 +11,7 @@ android {
     buildToolsVersion("28.0.3")
     defaultConfig {
         applicationId("org.openvoipalliance.phonelibexample")
-        minSdkVersion(21)
+        minSdkVersion(23)
         targetSdkVersion(29)
         versionCode = 1
         versionName = "1.0"

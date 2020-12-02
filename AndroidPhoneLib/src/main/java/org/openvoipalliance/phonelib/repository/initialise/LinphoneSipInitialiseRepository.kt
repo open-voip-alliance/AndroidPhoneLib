@@ -29,4 +29,6 @@ internal class LinphoneSipInitialiseRepository(private val linphoneCoreInstanceM
     }
 
     override fun currentConfig(): org.openvoipalliance.phonelib.config.Config = linphoneCoreInstanceManager.config
+
+    override fun isInitialised(): Boolean = linphoneCoreInstanceManager.initialised
 }

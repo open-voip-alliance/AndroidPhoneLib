@@ -34,6 +34,7 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
         internal set
     private var linphoneCore: Core? = null
 
+    var isRegistered: Boolean = false
     val initialised: Boolean get() = linphoneCore != null && !destroyed
 
     val safeLinphoneCore: Core?
@@ -68,6 +69,7 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
                 addListener(this@LinphoneCoreInstanceManager)
                 enableDnsSrv(false)
                 enableDnsSearch(false)
+                isAutoIterateEnabled = false
                 start()
             }
             initLibLinphone()
@@ -76,6 +78,7 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
                 override fun run() {
                     Handler(Looper.getMainLooper()).post {
                         if (destroyed) {
+                            isRegistered = false
                             cancel()
                             Factory.instance().loggingService.removeListener(this@LinphoneCoreInstanceManager)
                             linphoneCore?.isNetworkReachable = false
@@ -162,7 +165,7 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
         inputStream.close()
     }
 
-    override fun onCallStateChanged(lc: Core?, linphoneCall: LinphoneCall?, state: LinphoneCall.State, message: String?) {
+    override fun onCallStateChanged(lc: Core, linphoneCall: LinphoneCall, state: LinphoneCall.State, message: String) {
         Log.e(TAG, "callState: $state, Message: $message")
 
         val call = Call(linphoneCall ?: return)
@@ -170,14 +173,17 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
         when (state) {
             LinphoneCall.State.IncomingReceived -> config.callListener.incomingCallReceived(call)
             LinphoneCall.State.OutgoingInit -> config.callListener.outgoingCallCreated(call)
-            LinphoneCall.State.Connected -> config.callListener.callConnected(call)
+            LinphoneCall.State.Connected -> {
+                safeLinphoneCore?.activateAudioSession(true)
+                config.callListener.callConnected(call)
+            }
             LinphoneCall.State.End -> config.callListener.callEnded(call)
             LinphoneCall.State.Error -> config.callListener.error(call)
             else -> config.callListener.callUpdated(call)
         }
     }
 
-    override fun onGlobalStateChanged(lc: Core?, gstate: GlobalState?, message: String?) {
+    override fun onGlobalStateChanged(lc: Core, gstate: GlobalState, message: String) {
         gstate?.let {
             globalState = it
 

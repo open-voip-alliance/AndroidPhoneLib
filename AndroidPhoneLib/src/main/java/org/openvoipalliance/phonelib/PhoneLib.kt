@@ -33,6 +33,19 @@ class PhoneLib private constructor(private val context: Context) {
     }
 
     /**
+     * Check to see if the phonelib is initialised and ready to make calls.
+     *
+     */
+    val isInitialised: Boolean
+        get() = sipInitialiseRepository.isInitialised()
+
+    val isRegistered: Boolean
+        get() = sipRegisterRepository.isRegistered()
+
+    val isReady: Boolean
+        get() = isInitialised && isRegistered
+
+    /**
      * This registers your user on SIP. You need this before placing a call.
      *
      */

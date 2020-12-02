@@ -18,7 +18,7 @@ internal class LinphoneSipSessionRepository(private val linphoneCoreInstanceMana
 
     override fun acceptIncoming(call: Call) {
         try {
-            linphoneCoreInstanceManager.safeLinphoneCore?.acceptCall(call.linphoneCall)
+            call.linphoneCall.accept()
         } catch (e: CoreException) {
             e.printStackTrace()
         }
@@ -26,7 +26,7 @@ internal class LinphoneSipSessionRepository(private val linphoneCoreInstanceMana
 
     override fun declineIncoming(call: Call, reason: Reason) {
         try {
-            linphoneCoreInstanceManager.safeLinphoneCore?.declineCall(call.linphoneCall, org.linphone.core.Reason.fromInt(reason.value))
+            call.linphoneCall.decline(org.linphone.core.Reason.fromInt(reason.value))
         } catch (e: CoreException) {
             e.printStackTrace()
         }

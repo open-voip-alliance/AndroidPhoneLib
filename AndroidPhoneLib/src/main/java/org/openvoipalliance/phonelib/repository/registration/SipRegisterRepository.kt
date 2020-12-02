@@ -10,4 +10,5 @@ internal interface SipRegisterRepository {
     fun register(callback: RegistrationCallback)
 
     fun unregister()
+    fun isRegistered(): Boolean
 }
