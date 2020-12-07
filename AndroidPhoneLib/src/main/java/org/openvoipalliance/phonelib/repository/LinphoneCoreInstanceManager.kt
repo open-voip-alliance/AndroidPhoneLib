@@ -170,6 +170,8 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
 
         val call = Call(linphoneCall ?: return)
 
+        Log.e(TAG, "callState: $state, Message: $message - SENDING EVENT")
+
         when (state) {
             LinphoneCall.State.IncomingReceived -> config.callListener.incomingCallReceived(call)
             LinphoneCall.State.OutgoingInit -> config.callListener.outgoingCallCreated(call)

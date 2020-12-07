@@ -63,6 +63,8 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
             algorithm = null
         }
 
+        core.clearProxyConfig()
+
         core.addProxyConfig(createProxyConfig(core, config.auth.name, config.auth.domain, config.auth.port.toString()))
 
         core.apply {

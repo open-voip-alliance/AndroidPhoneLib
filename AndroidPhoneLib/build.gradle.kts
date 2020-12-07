@@ -9,7 +9,7 @@ plugins {
     id("com.jfrog.bintray")
 }
 
-val libraryVersion = "0.6.17"
+val libraryVersion = "0.6.20"
 
 android {
     compileSdkVersion(30)

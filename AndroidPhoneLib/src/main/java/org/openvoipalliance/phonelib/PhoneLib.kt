@@ -101,6 +101,13 @@ class PhoneLib private constructor(private val context: Context) {
     fun callTo(number: String) = sipSessionRepository.callTo(number)
 
     /**
+     * A method that should be called when the application has received a push message and
+     * is waking from the background.
+     *
+     */
+    fun wake() = sipInitialiseRepository.wake()
+
+    /**
      * Whether or not the microphone is currently muted.
      *
      * Set to TRUE to mute the microphone and prevent voice transmission.
