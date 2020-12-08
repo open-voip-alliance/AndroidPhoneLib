@@ -11,12 +11,12 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
         get() = linphoneCoreInstanceManager.config
 
     @Throws(CoreException::class)
-    override fun register(registrationCallback: RegistrationCallback) {
+    override fun register(callback: RegistrationCallback) {
         val core = linphoneCoreInstanceManager.safeLinphoneCore ?: return
 
         core.addListener(object : SimpleLinphoneCoreListener {
             override fun onRegistrationStateChanged(lc: Core, cfg: ProxyConfig, cstate: RegistrationState, message: String) {
-                registrationCallback.invoke(when (cstate) {
+                callback.invoke(when (cstate) {
                     RegistrationState.None -> {
                         org.openvoipalliance.phonelib.model.RegistrationState.NONE
                     }
@@ -65,7 +65,12 @@ internal class LinphoneSipRegisterRepository(private val linphoneCoreInstanceMan
 
         core.clearProxyConfig()
 
-        core.addProxyConfig(createProxyConfig(core, config.auth.name, config.auth.domain, config.auth.port.toString()))
+        val proxyConfig = createProxyConfig(core, config.auth.name, config.auth.domain, config.auth.port.toString())
+
+        if (core.addProxyConfig(proxyConfig) == -1) {
+            callback.invoke(org.openvoipalliance.phonelib.model.RegistrationState.FAILED)
+            return
+        }
 
         core.apply {
             addAuthInfo(authInfo)
