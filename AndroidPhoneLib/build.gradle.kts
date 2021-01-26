@@ -9,7 +9,7 @@ plugins {
     id("com.jfrog.bintray")
 }
 
-val libraryVersion = "0.6.21"
+val libraryVersion = "0.6.25"
 
 android {
     compileSdkVersion(30)
@@ -29,7 +29,7 @@ dependencies {
     testImplementation("junit:junit:4.12")
 
     api("org.koin:koin-android:2.2.0-rc-4")
-    embed("org.linphone:linphone-sdk-android:4.5.0-alpha.222+0ef3afd")
+    embed("org.linphone:linphone-sdk-android:4.5.0-beta.8+2efed44")
 }
 
 publishing {

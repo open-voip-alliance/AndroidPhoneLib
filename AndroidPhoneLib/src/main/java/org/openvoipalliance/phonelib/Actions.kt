@@ -3,16 +3,16 @@ package org.openvoipalliance.phonelib
 import android.Manifest
 import android.content.Context
 import androidx.annotation.RequiresPermission
-import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.openvoipalliance.phonelib.di.Injection
+import org.openvoipalliance.phonelib.di.PhoneLibKoinComponent
 import org.openvoipalliance.phonelib.model.AttendedTransferSession
 import org.openvoipalliance.phonelib.model.Call
 import org.openvoipalliance.phonelib.model.Reason
 import org.openvoipalliance.phonelib.repository.call.controls.SipActiveCallControlsRepository
 import org.openvoipalliance.phonelib.repository.call.session.SipSessionRepository
 
-class Actions(context: Context, private val call: Call) : KoinComponent {
+class Actions(context: Context, private val call: Call) : PhoneLibKoinComponent {
 
     private val sipCallControlsRepository: SipActiveCallControlsRepository by inject()
     private val sipSessionRepository: SipSessionRepository by inject()

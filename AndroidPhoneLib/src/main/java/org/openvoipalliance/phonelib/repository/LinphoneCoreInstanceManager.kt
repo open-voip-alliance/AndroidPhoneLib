@@ -72,6 +72,7 @@ internal class LinphoneCoreInstanceManager(private val mServiceContext: Context)
                 isAutoIterateEnabled = false
                 start()
             }
+
             initLibLinphone()
 
             val task: TimerTask = object : TimerTask() {
