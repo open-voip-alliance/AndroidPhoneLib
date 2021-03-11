@@ -10,7 +10,7 @@ android {
     compileSdkVersion(29)
     buildToolsVersion("28.0.3")
     defaultConfig {
-        applicationId("org.openvoipalliance.phonelibexample")
+        applicationId("org.openvoipalliance.voiplibexample")
         minSdkVersion(23)
         targetSdkVersion(29)
         versionCode = 1
@@ -35,7 +35,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.2.0")
     implementation("androidx.constraintlayout:constraintlayout:2.0.4")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.72")
-    implementation(project(":AndroidPhoneLib"))
+    implementation(project(":AndroidVoIPLib"))
 
     androidTestImplementation("androidx.test.espresso:espresso-core:3.1.0") {
         exclude(group = "com.android.support", module = "support-annotations")
