@@ -1,12 +1,12 @@
 
 
-# AndroidPhoneLib
+# AndroidVoIPLib
 
 This is library is an opinionated VoIP wrapper for Android applications. It currently uses Linphone as the underlying SIP library.
 
 ## Installation
 
-    implementation 'org.openvoipalliance:AndroidPhoneLib:1.x.x'
+    implementation 'org.openvoipalliance:AndroidVoIPLib:1.x.x'
 
 ## Registration
 
@@ -19,16 +19,16 @@ val config = Config(
 )
 ```
 
-Step 2: Get an instance of the PhoneLib and initialise it with the config
+Step 2: Get an instance of the VoIPLib and initialise it with the config
 
 ```
-val phoneLib = PhoneLib.getInstance(CONTEXT).initialise(config)
+val voipLib = VoIPLib.getInstance(CONTEXT).initialise(config)
 ```
 
 Step 3: Call `register` to register with the authentication information provided in the config
 
 ```
-phoneLib.register {  registrationState ->
+voipLib.register {  registrationState ->
        if (registrationState == RegistrationState.REGISTERED) {
            // registration was successful
        }
@@ -38,7 +38,7 @@ phoneLib.register {  registrationState ->
 To `unregister` use:
 
 ```
-phoneLib.unregister()
+voipLib.unregister()
 ```
 
 ## Calling
@@ -63,7 +63,7 @@ All of these methods will provide a Call object, listening to these methods is t
 Once registered you can make a call as follows:
 
 ```
-phoneLib.callTo('0612345678')
+voipLib.callTo('0612345678')
 ```
 
 If setup successfully this will be followed shortly by a call to the outgoingCallCreated method which will provide a Call object.
@@ -74,11 +74,11 @@ When successfully registered, the library will be listening for incoming calls. 
 
 Answering or declining an incoming call are considered actions, you can perform an action on a call as follows:
 
-    phoneLib.actions(call).accept()
+    voipLib.actions(call).accept()
 
 or
 
-    phoneLib.actions(call).decline()
+    voipLib.actions(call).decline()
 
 There are many more actions available for calls, please look inspect the Actions class to see what more can be done to active calls.
 
@@ -95,11 +95,11 @@ The library contains an example app that shows more clearly how to use the libra
       codecs = arrayOf(Codec.OPUS)
     )
 
-    val phoneLib = PhoneLib.getInstance(context).initialise(config)
+    val voipLib = VoIPLib.getInstance(context).initialise(config)
 
-    phoneLib.register {
+    voipLib.register {
 	    if (it == RegistrationState.REGISTERED) {
-		   phoneLib.callTo("0123456789")
+		   voipLib.callTo("0123456789")
 	    }
     }
 
