@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Simple PhoneLib implementation</string>
+    <string name="app_name" translatable="false">Simple VoIPLib implementation</string>
 
     <string name="accept_call">Accept call</string>
     <string name="audio_call">Audio call</string>

@@ -1,1 +1,1 @@
-include(":app", ":AndroidPhoneLib")
+include(":app", ":AndroidVoIPLib")
